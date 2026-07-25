@@ -4,160 +4,75 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Koleksi Musik Suno AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Reset & Dasar Halaman */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #0f172a; /* Warna background gelap modern */
-      color: #f8fafc;
-      padding: 40px 20px;
-    }
-
-    /* Header */
-    header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-    header h1 {
-      font-size: 2.2rem;
-      color: #38bdf8;
-      margin-bottom: 8px;
-    }
-    header p {
-      color: #94a3b8;
-      font-size: 1rem;
-    }
-
-    /* Grid Kartu Responsive */
-    .music-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 25px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    /* Komponen Kartu Musik */
-    .card {
-      background-color: #1e293b;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #334155;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(56, 189, 248, 0.15);
-    }
-
-    /* Cover Gambar */
-    .cover-img {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-    }
-
-    /* Isi Kartu */
-    .card-body {
-      padding: 18px;
-    }
-    .title {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: #f8fafc;
-      margin-bottom: 4px;
-    }
-    .artist {
-      font-size: 0.85rem;
-      color: #38bdf8;
-      margin-bottom: 15px;
-    }
-
-    /* Audio Player Custom Style */
-    audio {
-      width: 100%;
-      height: 40px;
-      margin-bottom: 15px;
-      outline: none;
-    }
-
-    /* Tombol Download */
-    .btn-download {
-      display: block;
-      width: 100%;
-      text-align: center;
-      padding: 10px 0;
-      background: linear-gradient(135deg, #0284c7, #2563eb);
-      color: #ffffff;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-      border-radius: 8px;
-      transition: background 0.2s ease;
-    }
-    .btn-download:hover {
-      background: linear-gradient(135deg, #0369a1, #1d4ed8);
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; padding: 40px 20px; }
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 { font-size: 2.2rem; color: #38bdf8; margin-bottom: 8px; }
+    .music-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
+    .card { background-color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+    .cover-img { width: 100%; height: 220px; object-fit: cover; }
+    .card-body { padding: 18px; }
+    .title { font-size: 1.15rem; font-weight: 600; color: #f8fafc; margin-bottom: 4px; }
+    .artist { font-size: 0.85rem; color: #38bdf8; margin-bottom: 15px; }
+    audio { width: 100%; height: 40px; margin-bottom: 15px; }
+    .btn-download { display: block; width: 100%; text-align: center; padding: 10px 0; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; text-decoration: none; font-weight: 600; border-radius: 8px; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>🎵 Portfolio Musik Suno AI</h1>
-    <p>Dengarkan streaming langsung atau unduh lagu favoritmu secara gratis!</p>
+    <p>Dengarkan streaming langsung atau unduh lagu favoritmu!</p>
   </header>
 
-  <div class="music-grid">
-
-    <!-- ==================== KARTU LAGU 1 ==================== -->
-    <div class="card">
-      <img src="covers/cover1.jpg" alt="Cover Lagu 1" class="cover-img">
-      <div class="card-body">
-        <h2 class="title">Malam Bertabur Bintang</h2>
-        <p class="artist">Suno AI • Pop Acoustic</p>
-        
-        <!-- Pemutar Audio -->
-        <audio controls controlsList="nodownload">
-          <source src="audio/lagu1.mp3" type="audio/mpeg">
-          Browser Anda tidak mendukung pemutar audio.
-        </audio>
-
-        <!-- Tombol Download -->
-        <a href="audio/lagu1.mp3" download="Malam Bertabur Bintang.mp3" class="btn-download">
-          📥 Download MP3
-        </a>
-      </div>
-    </div>
-
-    <!-- ==================== KARTU LAGU 2 ==================== -->
-    <div class="card">
-      <img src="covers/cover2.jpg" alt="Cover Lagu 2" class="cover-img">
-      <div class="card-body">
-        <h2 class="title">Jejak di Udara</h2>
-        <p class="artist">Suno AI • Synthwave Rock</p>
-        
-        <!-- Pemutar Audio -->
-        <audio controls controlsList="nodownload">
-          <source src="audio/lagu2.mp3" type="audio/mpeg">
-          Browser Anda tidak mendukung pemutar audio.
-        </audio>
-
-        <!-- Tombol Download -->
-        <a href="audio/lagu2.mp3" download="Jejak di Udara.mp3" class="btn-download">
-          📥 Download MP3
-        </a>
-      </div>
-    </div>
-
-    <!-- Nanti kalau mau tambah lagu baru, tinggal COPY-PASTE blok "KARTU LAGU" di atas ini -->
-
+  <div class="music-grid" id="musicGrid">
+    <!-- Kartu-kartu lagu akan muncul otomatis di sini via JavaScript -->
   </div>
 
+  <script>
+    // ⚠️ GANTI DENGAN API CREDENTIALS SUPABASE KAMU
+    const SUPABASE_URL = 'https://XYZXYZ.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadSongs() {
+      const grid = document.getElementById('musicGrid');
+      grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Memuat lagu...</p>';
+
+      const { data: songs, error } = await supabaseClient
+        .from('songs')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) {
+        grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Gagal memuat lagu.</p>';
+        return;
+      }
+
+      grid.innerHTML = '';
+      songs.forEach(song => {
+        const cardHtml = `
+          <div class="card">
+            <img src="${song.cover_url}" alt="Cover" class="cover-img">
+            <div class="card-body">
+              <h2 class="title">${song.title}</h2>
+              <p class="artist">${song.genre}</p>
+              <audio controls controlsList="nodownload">
+                <source src="${song.audio_url}" type="audio/mpeg">
+              </audio>
+              <a href="${song.audio_url}" download="${song.title}.mp3" class="btn-download">
+                📥 Download MP3
+              </a>
+            </div>
+          </div>
+        `;
+        grid.innerHTML += cardHtml;
+      });
+    }
+
+    loadSongs();
+  </script>
 </body>
 </html>
