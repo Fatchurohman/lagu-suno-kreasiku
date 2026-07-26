@@ -4,69 +4,89 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Tambah Lagu Suno</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: sans-serif; background: #0f172a; color: #fff; padding: 20px; }
-    .form-container { max-width: 500px; margin: 0 auto; background: #1e293b; padding: 25px; border-radius: 12px; border: 1px solid #334155; }
-    h2 { margin-bottom: 20px; color: #38bdf8; text-align: center; }
-    label { display: block; margin-top: 10px; font-size: 0.9rem; color: #94a3b8; }
-    input { width: 100%; padding: 10px; margin-top: 5px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; padding: 12px; margin-top: 20px; background: #2563eb; color: #fff; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+    body { font-family: sans-serif; background: #0f172a; color: #fff; padding: 20px; max-width: 500px; margin: auto; }
+    .card { background: #1e293b; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    h2 { text-align: center; color: #38bdf8; margin-top: 0; }
+    label { display: block; margin-top: 12px; font-size: 14px; color: #94a3b8; }
+    input { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; margin-top: 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
     button:hover { background: #1d4ed8; }
-    #status { margin-top: 15px; text-align: center; font-weight: bold; }
+    #status { margin-top: 15px; font-weight: bold; text-align: center; }
   </style>
 </head>
 <body>
 
-  <div class="form-container">
+  <div class="card">
     <h2>➕ Tambah Lagu Baru</h2>
-    <form id="songForm">
-      <label>Judul Lagu:</label>
-      <input type="text" id="title" placeholder="Contoh: Malam Bertabur Bintang" required>
-
-      <label>Genre / Deskripsi:</label>
-      <input type="text" id="genre" placeholder="Contoh: Suno AI • Pop Acoustic" required>
-
-      <label>URL Gambar Cover (dari Supabase Storage):</label>
-      <input type="url" id="cover_url" placeholder="https://.../cover1.jpg" required>
-
-      <label>URL Audio MP3 (dari Supabase Storage):</label>
-      <input type="url" id="audio_url" placeholder="https://.../lagu1.mp3" required>
-
-      <button type="submit">Simpan Lagu ke Website</button>
-    </form>
+    
+    <label>Judul Lagu:</label>
+    <input type="text" id="title" placeholder="Contoh: Malam Bertabur Bintang">
+    
+    <label>Genre / Deskripsi:</label>
+    <input type="text" id="genre" placeholder="Contoh: Suno AI • Pop Acoustic">
+    
+    <label>URL Gambar Cover (dari Supabase Storage):</label>
+    <input type="text" id="cover_url" placeholder="https://.../cover1.jpg">
+    
+    <label>URL Audio MP3 (dari Supabase Storage):</label>
+    <input type="text" id="audio_url" placeholder="https://.../lagu1.mp3">
+    
+    <button onclick="simpanLagu()">Simpan Lagu ke Website</button>
+    
     <div id="status"></div>
   </div>
 
   <script>
-    // ⚠️ GANTI DENGAN API CREDENTIALS SUPABASE KAMU
-    const SUPABASE_URL = 'https://XYZXYZ.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
+    // ⚠️ GANTI TEKS DI BAWAH INI DENGAN API KEY DEFAULT LENGKAP KAMU ⚠️
+    const SUPABASE_ANON_KEY = 'PASTE_ANON_KEY_LENGKAP_KAMU_DI_SINI'; 
 
-    document.getElementById('songForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    async function simpanLagu() {
+      const title = document.getElementById('title').value.trim();
+      const genre = document.getElementById('genre').value.trim();
+      const cover_url = document.getElementById('cover_url').value.trim();
+      const audio_url = document.getElementById('audio_url').value.trim();
       const statusDiv = document.getElementById('status');
-      statusDiv.innerText = 'Menyimpan...';
 
-      const title = document.getElementById('title').value;
-      const genre = document.getElementById('genre').value;
-      const cover_url = document.getElementById('cover_url').value;
-      const audio_url = document.getElementById('audio_url').value;
+      if (!title || !genre || !cover_url || !audio_url) {
+        statusDiv.style.color = '#ef4444';
+        statusDiv.innerText = '❌ Semua kolom harus diisi!';
+        return;
+      }
 
-      const { data, error } = await supabaseClient
-        .from('songs')
-        .insert([{ title, genre, cover_url, audio_url }]);
+      statusDiv.style.color = '#f59e0b';
+      statusDiv.innerText = '⏳ Menyimpan data...';
 
-      if (error) {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/songs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ title, genre, cover_url, audio_url })
+        });
+
+        if (response.ok) {
+          statusDiv.style.color = '#22c55e';
+          statusDiv.innerText = '✅ Lagu berhasil ditambahkan!';
+          document.getElementById('title').value = '';
+          document.getElementById('genre').value = '';
+          document.getElementById('cover_url').value = '';
+          document.getElementById('audio_url').value = '';
+        } else {
+          const errData = await response.json();
+          statusDiv.style.color = '#ef4444';
+          statusDiv.innerText = 'Gagal menyimpan: ' + (errData.message || response.statusText);
+        }
+      } catch (error) {
         statusDiv.style.color = '#ef4444';
         statusDiv.innerText = 'Gagal menyimpan: ' + error.message;
-      } else {
-        statusDiv.style.color = '#4ade80';
-        statusDiv.innerText = '✅ Lagu berhasil ditambahkan!';
-        document.getElementById('songForm').reset();
       }
-    });
+    }
   </script>
 </body>
 </html>
