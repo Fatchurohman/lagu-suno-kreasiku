@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Tambah Lagu Suno</title>
+  <!-- Library Supabase Resmi JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: #0f172a; color: #fff; padding: 20px; max-width: 500px; margin: auto; }
     .card { background: #1e293b; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
@@ -21,16 +23,16 @@
     <h2>➕ Tambah Lagu Baru</h2>
     
     <label>Judul Lagu:</label>
-    <input type="text" id="title" placeholder="Contoh: Malam Bertabur Bintang">
+    <input type="text" id="title" placeholder="Contoh: Cinta Musim Durian">
     
     <label>Genre / Deskripsi:</label>
-    <input type="text" id="genre" placeholder="Contoh: Suno AI • Pop Acoustic">
+    <input type="text" id="genre" placeholder="Contoh: Pop">
     
     <label>URL Gambar Cover (dari Supabase Storage):</label>
-    <input type="text" id="cover_url" placeholder="https://.../cover1.jpg">
+    <input type="text" id="cover_url" placeholder="https://.../cover.jpg">
     
     <label>URL Audio MP3 (dari Supabase Storage):</label>
-    <input type="text" id="audio_url" placeholder="https://.../lagu1.mp3">
+    <input type="text" id="audio_url" placeholder="https://.../lagu.mp3">
     
     <button onclick="simpanLagu()">Simpan Lagu ke Website</button>
     
@@ -39,8 +41,10 @@
 
   <script>
     const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
-    // ⚠️ GANTI TEKS DI BAWAH INI DENGAN API KEY DEFAULT LENGKAP KAMU ⚠️
-    const SUPABASE_ANON_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU'; 
+    const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
+
+    // Inisialisasi Klien Supabase Resmi
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function simpanLagu() {
       const title = document.getElementById('title').value.trim();
@@ -58,33 +62,20 @@
       statusDiv.style.color = '#f59e0b';
       statusDiv.innerText = '⏳ Menyimpan data...';
 
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/songs`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({ title, genre, cover_url, audio_url })
-        });
+      const { data, error } = await _supabase
+        .from('songs')
+        .insert([{ title, genre, cover_url, audio_url }]);
 
-        if (response.ok) {
-          statusDiv.style.color = '#22c55e';
-          statusDiv.innerText = '✅ Lagu berhasil ditambahkan!';
-          document.getElementById('title').value = '';
-          document.getElementById('genre').value = '';
-          document.getElementById('cover_url').value = '';
-          document.getElementById('audio_url').value = '';
-        } else {
-          const errData = await response.json();
-          statusDiv.style.color = '#ef4444';
-          statusDiv.innerText = 'Gagal menyimpan: ' + (errData.message || response.statusText);
-        }
-      } catch (error) {
+      if (error) {
         statusDiv.style.color = '#ef4444';
         statusDiv.innerText = 'Gagal menyimpan: ' + error.message;
+      } else {
+        statusDiv.style.color = '#22c55e';
+        statusDiv.innerText = '✅ Lagu berhasil ditambahkan!';
+        document.getElementById('title').value = '';
+        document.getElementById('genre').value = '';
+        document.getElementById('cover_url').value = '';
+        document.getElementById('audio_url').value = '';
       }
     }
   </script>
