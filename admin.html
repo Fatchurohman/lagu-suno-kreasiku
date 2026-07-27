@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Tambah Lagu Suno</title>
-  <!-- Library Supabase Resmi JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: #0f172a; color: #fff; padding: 20px; max-width: 500px; margin: auto; }
     .card { background: #1e293b; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     h2 { text-align: center; color: #38bdf8; margin-top: 0; }
     label { display: block; margin-top: 12px; font-size: 14px; color: #94a3b8; }
-    input { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
+    input, textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
+    textarea { height: 100px; resize: vertical; font-family: inherit; }
     button { width: 100%; padding: 12px; margin-top: 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
     button:hover { background: #1d4ed8; }
     #status { margin-top: 15px; font-weight: bold; text-align: center; }
@@ -28,6 +28,9 @@
     <label>Genre / Deskripsi:</label>
     <input type="text" id="genre" placeholder="Contoh: Pop">
     
+    <label>Lirik Lagu (Opsional):</label>
+    <textarea id="lyrics" placeholder="Masukkan lirik lagu di sini..."></textarea>
+    
     <label>URL Gambar Cover (dari Supabase Storage):</label>
     <input type="text" id="cover_url" placeholder="https://.../cover.jpg">
     
@@ -43,19 +46,19 @@
     const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
 
-    // Inisialisasi Klien Supabase Resmi
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function simpanLagu() {
       const title = document.getElementById('title').value.trim();
       const genre = document.getElementById('genre').value.trim();
+      const lyrics = document.getElementById('lyrics').value.trim();
       const cover_url = document.getElementById('cover_url').value.trim();
       const audio_url = document.getElementById('audio_url').value.trim();
       const statusDiv = document.getElementById('status');
 
       if (!title || !genre || !cover_url || !audio_url) {
         statusDiv.style.color = '#ef4444';
-        statusDiv.innerText = '❌ Semua kolom harus diisi!';
+        statusDiv.innerText = '❌ Judul, Genre, Cover, dan MP3 wajib diisi!';
         return;
       }
 
@@ -64,7 +67,7 @@
 
       const { data, error } = await _supabase
         .from('songs')
-        .insert([{ title, genre, cover_url, audio_url }]);
+        .insert([{ title, genre, lyrics, cover_url, audio_url }]);
 
       if (error) {
         statusDiv.style.color = '#ef4444';
@@ -74,6 +77,7 @@
         statusDiv.innerText = '✅ Lagu berhasil ditambahkan!';
         document.getElementById('title').value = '';
         document.getElementById('genre').value = '';
+        document.getElementById('lyrics').value = '';
         document.getElementById('cover_url').value = '';
         document.getElementById('audio_url').value = '';
       }
