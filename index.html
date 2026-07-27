@@ -6,70 +6,77 @@
   <title>Koleksi Musik Suno AI</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; padding: 40px 20px; }
-    header { text-align: center; margin-bottom: 40px; }
-    header h1 { font-size: 2.2rem; color: #38bdf8; margin-bottom: 8px; }
-    .music-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
-    .card { background-color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
-    .cover-img { width: 100%; height: 220px; object-fit: cover; }
-    .card-body { padding: 18px; }
-    .title { font-size: 1.15rem; font-weight: 600; color: #f8fafc; margin-bottom: 4px; }
-    .artist { font-size: 0.85rem; color: #38bdf8; margin-bottom: 15px; }
-    audio { width: 100%; height: 40px; margin-bottom: 15px; }
-    .btn-download { display: block; width: 100%; text-align: center; padding: 10px 0; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; text-decoration: none; font-weight: 600; border-radius: 8px; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    h1 { text-align: center; color: #38bdf8; margin-bottom: 30px; }
+    .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; }
+    .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+    .cover { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+    .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+    .title { font-size: 18px; font-weight: bold; margin: 0 0 5px 0; color: #f1f5f9; }
+    .genre { font-size: 13px; color: #94a3b8; margin-bottom: 12px; }
+    audio { width: 100%; margin-top: auto; border-radius: 8px; }
+    .btn-container { display: flex; gap: 8px; margin-top: 10px; }
+    .btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
+    .btn-download { background: #0284c7; color: #fff; }
+    .btn-lyrics { background: #334155; color: #38bdf8; }
+    .lyrics-box { display: none; background: #0f172a; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 12px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 150px; overflow-y: auto; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>🎵 Portfolio Musik Suno AI</h1>
-    <p>Dengarkan streaming langsung atau unduh lagu favoritmu!</p>
-  </header>
-
-  <div class="music-grid" id="musicGrid">
-    <!-- Kartu-kartu lagu akan muncul otomatis di sini via JavaScript -->
+  <h1>🎵 Koleksi Musik Suno AI</h1>
+  <div id="song-list" class="song-grid">
+    <p style="text-align: center; grid-column: 1/-1;">⏳ Memuat lagu...</p>
   </div>
 
   <script>
-    // ⚠️ GANTI DENGAN API CREDENTIALS SUPABASE KAMU
     const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function loadSongs() {
-      const grid = document.getElementById('musicGrid');
-      grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Memuat lagu...</p>';
-
-      const { data: songs, error } = await supabaseClient
+      const container = document.getElementById('song-list');
+      
+      const { data: songs, error } = await _supabase
         .from('songs')
         .select('*')
         .order('id', { ascending: false });
 
       if (error) {
-        grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Gagal memuat lagu.</p>';
+        container.innerHTML = `<p style="color:#ef4444; text-align:center; grid-column: 1/-1;">Gagal memuat lagu: ${error.message}</p>`;
         return;
       }
 
-      grid.innerHTML = '';
-      songs.forEach(song => {
-        const cardHtml = `
-          <div class="card">
-            <img src="${song.cover_url}" alt="Cover" class="cover-img">
-            <div class="card-body">
-              <h2 class="title">${song.title}</h2>
-              <p class="artist">${song.genre}</p>
-              <audio controls controlsList="nodownload">
-                <source src="${song.audio_url}" type="audio/mpeg">
-              </audio>
-              <a href="${song.audio_url}" download="${song.title}.mp3" class="btn-download">
-                📥 Download MP3
-              </a>
+      if (!songs || songs.length === 0) {
+        container.innerHTML = `<p style="text-align:center; grid-column: 1/-1;">Belum ada lagu yang ditambahkan.</p>`;
+        return;
+      }
+
+      container.innerHTML = songs.map(song => `
+        <div class="card">
+          <img class="cover" src="${song.cover_url}" alt="${song.title}">
+          <div class="info">
+            <div class="title">${song.title}</div>
+            <div class="genre">${song.genre}</div>
+            <audio controls src="${song.audio_url}"></audio>
+            
+            <div class="btn-container">
+              <a class="btn btn-download" href="${song.audio_url}" download target="_blank">Download MP3</a>
+              ${song.lyrics ? `<button class="btn btn-lyrics" onclick="toggleLyrics(${song.id})">📄 Lirik</button>` : ''}
             </div>
+            
+            ${song.lyrics ? `<div id="lyrics-${song.id}" class="lyrics-box">${song.lyrics}</div>` : ''}
           </div>
-        `;
-        grid.innerHTML += cardHtml;
-      });
+        </div>
+      `).join('');
+    }
+
+    function toggleLyrics(id) {
+      const el = document.getElementById(`lyrics-${id}`);
+      if (el) {
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+      }
     }
 
     loadSongs();
