@@ -7,15 +7,27 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-    h1 { text-align: center; color: #38bdf8; margin-bottom: 30px; }
     
+    /* Header Judul & Subtitle */
+    .header-container { text-align: center; margin-bottom: 30px; }
+    h1 { color: #38bdf8; margin: 0; font-size: 28px; }
+    .subtitle { 
+      color: #ffffff; 
+      font-size: 15px; 
+      font-style: italic; 
+      font-family: 'Georgia', 'Trebuchet MS', serif; 
+      margin-top: 5px; 
+      letter-spacing: 1.5px;
+      opacity: 0.95;
+    }
+
     /* Grid Kartu Lagu */
     .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; }
     
     /* Kartu Lagu */
     .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
     
-    /* 🖼️ UKURAN COVER DIPERKE CIL DI SINI 🖼️ */
+    /* Ukuran Cover Kompak */
     .cover-container { text-align: center; width: 100%; margin-bottom: 12px; }
     .cover { width: 100%; max-width: 220px; height: 220px; object-fit: cover; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
     
@@ -34,7 +46,11 @@
 </head>
 <body>
 
-  <h1>🎵 Koleksi Musik Suno AI</h1>
+  <div class="header-container">
+    <h1>🎵 Koleksi Musik Suno AI</h1>
+    <div class="subtitle">by fatur62</div>
+  </div>
+
   <div id="song-list" class="song-grid">
     <p style="text-align: center; grid-column: 1/-1;">⏳ Memuat lagu...</p>
   </div>
