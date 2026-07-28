@@ -8,18 +8,28 @@
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
     h1 { text-align: center; color: #38bdf8; margin-bottom: 30px; }
+    
+    /* Grid Kartu Lagu */
     .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; }
-    .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
-    .cover { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-    .info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-    .title { font-size: 18px; font-weight: bold; margin: 0 0 5px 0; color: #f1f5f9; }
-    .genre { font-size: 13px; color: #94a3b8; margin-bottom: 12px; }
+    
+    /* Kartu Lagu */
+    .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
+    
+    /* 🖼️ UKURAN COVER DIPERKE CIL DI SINI 🖼️ */
+    .cover-container { text-align: center; width: 100%; margin-bottom: 12px; }
+    .cover { width: 100%; max-width: 220px; height: 220px; object-fit: cover; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+    
+    .info { flex-grow: 1; display: flex; flex-direction: column; }
+    .title { font-size: 18px; font-weight: bold; margin: 0 0 5px 0; color: #f1f5f9; text-align: center; }
+    .genre { font-size: 13px; color: #94a3b8; margin-bottom: 12px; text-align: center; }
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
-    .btn-container { display: flex; gap: 8px; margin-top: 10px; }
+    
+    .btn-container { display: flex; gap: 8px; margin-top: 12px; }
     .btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
     .btn-download { background: #0284c7; color: #fff; }
     .btn-lyrics { background: #334155; color: #38bdf8; }
-    .lyrics-box { display: none; background: #0f172a; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 12px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 150px; overflow-y: auto; }
+    
+    .lyrics-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -55,7 +65,9 @@
 
       container.innerHTML = songs.map(song => `
         <div class="card">
-          <img class="cover" src="${song.cover_url}" alt="${song.title}">
+          <div class="cover-container">
+            <img class="cover" src="${song.cover_url}" alt="${song.title}">
+          </div>
           <div class="info">
             <div class="title">${song.title}</div>
             <div class="genre">${song.genre}</div>
