@@ -3,111 +3,208 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Koleksi Musik Suno AI</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Koleksi Musik Suno AI - fatur62</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-    
-    /* Header Judul & Subtitle */
-    .header-container { text-align: center; margin-bottom: 30px; }
-    h1 { color: #38bdf8; margin: 0; font-size: 28px; }
-    .subtitle { 
-      color: #ffffff; 
-      font-size: 15px; 
-      font-style: italic; 
-      font-family: 'Georgia', 'Trebuchet MS', serif; 
-      margin-top: 5px; 
-      letter-spacing: 1.5px;
-      opacity: 0.95;
+    /* Reset & Base Styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    /* Grid Kartu Lagu */
-    .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; }
-    
-    /* Kartu Lagu */
-    .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
-    
-    /* Ukuran Cover Kompak */
-    .cover-container { text-align: center; width: 100%; margin-bottom: 12px; }
-    .cover { width: 100%; max-width: 220px; height: 220px; object-fit: cover; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
-    
-    .info { flex-grow: 1; display: flex; flex-direction: column; }
-    .title { font-size: 18px; font-weight: bold; margin: 0 0 5px 0; color: #f1f5f9; text-align: center; }
-    .genre { font-size: 13px; color: #94a3b8; margin-bottom: 12px; text-align: center; }
-    audio { width: 100%; margin-top: auto; border-radius: 8px; }
-    
-    .btn-container { display: flex; gap: 8px; margin-top: 12px; }
-    .btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
-    .btn-download { background: #0284c7; color: #fff; }
-    .btn-lyrics { background: #334155; color: #38bdf8; }
-    
-    .lyrics-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
+    body {
+      background-color: #0b1325; /* Warna latar belakang utama */
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Container Utama */
+    .container {
+      width: 100%;
+      max-width: 480px; /* Disesuaikan agar pas di layar HP */
+      text-align: center;
+    }
+
+    /* Header Section */
+    .header {
+      margin-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      color: #38bdf8;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .header .subtitle {
+      font-size: 1rem;
+      color: #cbd5e1;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* Box Info Deskripsi AI (Baru & Anti Bubrah) */
+    .ai-info-box {
+      background-color: #121d30;
+      border: 1.5px solid #d4af37; /* Warna Emas */
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin: 16px auto 24px auto;
+      width: 100%;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      word-wrap: break-word;
+    }
+
+    .ai-info-title {
+      color: #d4af37;
+      font-size: 0.95rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ai-info-text {
+      color: #d1d5db;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .ai-info-text strong {
+      color: #ffffff;
+    }
+
+    /* Card Lagu */
+    .song-card {
+      background-color: #162238;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .cover-art {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      object-fit: cover;
+      margin-bottom: 12px;
+    }
+
+    .song-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .song-genre {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 14px;
+    }
+
+    /* Audio Player Custom Style */
+    audio {
+      width: 100%;
+      margin-bottom: 14px;
+      border-radius: 20px;
+    }
+
+    /* Tombol Aksi */
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-download {
+      background-color: #0284c7;
+      color: #ffffff;
+    }
+
+    .btn-lirik {
+      background-color: #334155;
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header-container">
-    <h1>🎵 Koleksi Musik Suno AI</h1>
-    <div class="subtitle">by fatur62</div>
-  </div>
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <h1>🎵 Koleksi Musik Suno AI</h1>
+      <div class="subtitle">by fatur62</div>
+    </div>
 
-  <div id="song-list" class="song-grid">
-    <p style="text-align: center; grid-column: 1/-1;">⏳ Memuat lagu...</p>
-  </div>
+    <!-- Box Deskripsi AI (Terpasang Rapi) -->
+    <div class="ai-info-box">
+      <div class="ai-info-title">✨ Eksplorasi Musik AI</div>
+      <p class="ai-info-text">
+        Seluruh lagu dalam website ini merupakan hasil kreasi <strong>fatur62</strong> yang diproduksi sepenuhnya menggunakan teknologi Artificial Intelligence (AI).
+      </p>
+    </div>
 
-  <script>
-    const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
-
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function loadSongs() {
-      const container = document.getElementById('song-list');
+    <!-- Card Lagu 1 -->
+    <div class="song-card">
+      <img src="https://gscybboydazllikrqoxe.supabase.co/storage/v1/object/public/lagu-suno/Cover%20Belajar%20Tak%20Mengenal%20Usia.png" alt="Cover Belajar Tak Mengenal Usia" class="cover-art">
+      <div class="song-title">Belajar Tak Mengenal Usia</div>
+      <div class="song-genre">Insp.pop rock</div>
       
-      const { data: songs, error } = await _supabase
-        .from('songs')
-        .select('*')
-        .order('id', { ascending: false });
+      <audio controls>
+        <source src="https://gscybboydazllikrqoxe.supabase.co/storage/v1/object/public/lagu-suno/Belajar%20Tak%20Mengenal%20Usia.mp3" type="audio/mpeg">
+        Browser Anda tidak mendukung pemutar audio.
+      </audio>
 
-      if (error) {
-        container.innerHTML = `<p style="color:#ef4444; text-align:center; grid-column: 1/-1;">Gagal memuat lagu: ${error.message}</p>`;
-        return;
-      }
+      <div class="button-group">
+        <a href="https://gscybboydazllikrqoxe.supabase.co/storage/v1/object/public/lagu-suno/Belajar%20Tak%20Mengenal%20Usia.mp3" download class="btn btn-download">Download MP3</a>
+        <a href="#" class="btn btn-lirik">📄 Lirik</a>
+      </div>
+    </div>
 
-      if (!songs || songs.length === 0) {
-        container.innerHTML = `<p style="text-align:center; grid-column: 1/-1;">Belum ada lagu yang ditambahkan.</p>`;
-        return;
-      }
+    <!-- Card Lagu 2 -->
+    <div class="song-card">
+      <img src="https://gscybboydazllikrqoxe.supabase.co/storage/v1/object/public/lagu-suno/Cover%20Pocketful%20of%20Odds.png" alt="Cover Pocketful of Odds" class="cover-art">
+      <div class="song-title">Pocketful of Odds</div>
+      <div class="song-genre">Acoustic Pop</div>
+      
+      <audio controls>
+        <source src="https://gscybboydazllikrqoxe.supabase.co/storage/v1/object/public/lagu-suno/Pocketful%20of%20Odds.mp3" type="audio/mpeg">
+        Browser Anda tidak mendukung pemutar audio.
+      </audio>
 
-      container.innerHTML = songs.map(song => `
-        <div class="card">
-          <div class="cover-container">
-            <img class="cover" src="${song.cover_url}" alt="${song.title}">
-          </div>
-          <div class="info">
-            <div class="title">${song.title}</div>
-            <div class="genre">${song.genre}</div>
-            <audio controls src="${song.audio_url}"></audio>
-            
-            <div class="btn-container">
-              <a class="btn btn-download" href="${song.audio_url}" download target="_blank">Download MP3</a>
-              ${song.lyrics ? `<button class="btn btn-lyrics" onclick="toggleLyrics(${song.id})">📄 Lirik</button>` : ''}
-            </div>
-            
-            ${song.lyrics ? `<div id="lyrics-${song.id}" class="lyrics-box">${song.lyrics}</div>` : ''}
-          </div>
-        </div>
-      `).join('');
-    }
+      <div class="button-group">
+        <a href="https://gscybboydazllikrqoxe.supabase.co/storage/v1/object/public/lagu-suno/Pocketful%20of%20Odds.mp3" download class="btn btn-download">Download MP3</a>
+        <a href="#" class="btn btn-lirik">📄 Lirik</a>
+      </div>
+    </div>
 
-    function toggleLyrics(id) {
-      const el = document.getElementById(`lyrics-${id}`);
-      if (el) {
-        el.style.display = el.style.display === 'block' ? 'none' : 'block';
-      }
-    }
+  </div>
 
-    loadSongs();
-  </script>
 </body>
 </html>
