@@ -33,7 +33,19 @@
     
     .info { flex-grow: 1; display: flex; flex-direction: column; }
     .title { font-size: 18px; font-weight: bold; margin: 0 0 5px 0; color: #f1f5f9; text-align: center; }
-    .genre { font-size: 13px; color: #94a3b8; margin-bottom: 12px; text-align: center; }
+    .genre { font-size: 13px; color: #94a3b8; margin-bottom: 8px; text-align: center; }
+    
+    /* 🎵 CANVAS AUDIO SPECTRUM VISUALIZER 🎵 */
+    .visualizer-canvas { 
+      width: 100%; 
+      height: 45px; 
+      background: #0f172a; 
+      border-radius: 6px; 
+      margin-bottom: 8px; 
+      border: 1px solid #334155; 
+      display: block;
+    }
+
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
     
     .btn-container { display: flex; gap: 8px; margin-top: 12px; }
@@ -63,14 +75,14 @@
       auth: { persistSession: false }
     });
 
+    let audioCtx = null;
+
     async function loadSongs() {
       const container = document.getElementById('song-list');
       
-      // Menggunakan timestamp acak agar browser Wajib mengambil data asli dari Supabase
       const { data: songs, error } = await _supabase
         .from('songs')
         .select('*')
-        .neq('id', 0)
         .order('id', { ascending: false });
 
       if (error) {
@@ -86,12 +98,16 @@
       container.innerHTML = songs.map(song => `
         <div class="card">
           <div class="cover-container">
-            <img class="cover" src="${song.cover_url}?v=${Date.now()}" alt="${song.title}">
+            <img class="cover" src="${song.cover_url}" alt="${song.title}">
           </div>
           <div class="info">
             <div class="title">${song.title}</div>
             <div class="genre">${song.genre}</div>
-            <audio controls src="${song.audio_url}"></audio>
+            
+            <!-- Canvas Visualizer -->
+            <canvas id="canvas-${song.id}" class="visualizer-canvas"></canvas>
+
+            <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="initSpectrum(${song.id})"></audio>
             
             <div class="btn-container">
               <a class="btn btn-download" href="${song.audio_url}" download target="_blank">Download MP3</a>
@@ -108,6 +124,67 @@
       const el = document.getElementById(`lyrics-${id}`);
       if (el) {
         el.style.display = el.style.display === 'block' ? 'none' : 'block';
+      }
+    }
+
+    // Fungsi Pengolah Efek Audio Spectrum
+    const connectedAudios = new Set();
+
+    function initSpectrum(id) {
+      const audio = document.getElementById(`audio-${id}`);
+      const canvas = document.getElementById(`canvas-${id}`);
+      const ctx = canvas.getContext('2d');
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      if (!connectedAudios.has(id)) {
+        try {
+          const src = audioCtx.createMediaElementSource(audio);
+          const analyser = audioCtx.createAnalyser();
+          
+          src.connect(analyser);
+          analyser.connect(audioCtx.destination);
+          
+          analyser.fftSize = 64;
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+
+          connectedAudios.add(id);
+
+          function renderFrame() {
+            requestAnimationFrame(renderFrame);
+            
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const barWidth = (canvas.width / bufferLength) * 1.5;
+            let x = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+              const barHeight = (dataArray[i] / 255) * canvas.height;
+              
+              // Warna gradasi neon cyancat & biru untuk spectrum
+              const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+              gradient.addColorStop(0, '#0284c7');
+              gradient.addColorStop(1, '#38bdf8');
+
+              ctx.fillStyle = gradient;
+              ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+
+              x += barWidth + 1;
+            }
+          }
+
+          renderFrame();
+        } catch (e) {
+          console.log("Audio visualizer info:", e);
+        }
       }
     }
 
