@@ -38,7 +38,7 @@
     /* 🎵 CANVAS AUDIO SPECTRUM VISUALIZER 🎵 */
     .visualizer-canvas { 
       width: 100%; 
-      height: 45px; 
+      height: 60px; 
       background: #0f172a; 
       border-radius: 6px; 
       margin-bottom: 8px; 
@@ -104,8 +104,8 @@
             <div class="title">${song.title}</div>
             <div class="genre">${song.genre}</div>
             
-            <!-- Canvas Visualizer -->
-            <canvas id="canvas-${song.id}" class="visualizer-canvas"></canvas>
+            <!-- Canvas Visualizer dengan Teks Terpental -->
+            <canvas id="canvas-${song.id}" class="visualizer-canvas" width="300" height="60"></canvas>
 
             <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="initSpectrum(${song.id})"></audio>
             
@@ -127,7 +127,6 @@
       }
     }
 
-    // Fungsi Pengolah Efek Audio Spectrum
     const connectedAudios = new Set();
 
     function initSpectrum(id) {
@@ -156,6 +155,17 @@
 
           connectedAudios.add(id);
 
+          // Teks yang akan dibuat memantul
+          const text = "fatur62";
+          const letters = text.split('').map((char, index) => {
+            return {
+              char: char,
+              yOffset: 0, // Posisi memantul ke atas
+              // Setiap huruf dipasangkan dengan indeks frekuensi audio spectrum
+              targetBin: Math.floor((index + 1) * (bufferLength / (text.length + 2)))
+            };
+          });
+
           function renderFrame() {
             requestAnimationFrame(renderFrame);
             
@@ -166,10 +176,10 @@
             const barWidth = (canvas.width / bufferLength) * 1.5;
             let x = 0;
 
+            // 1. Gambar Batang Audio Spectrum
             for (let i = 0; i < bufferLength; i++) {
-              const barHeight = (dataArray[i] / 255) * canvas.height;
+              const barHeight = (dataArray[i] / 255) * (canvas.height - 15);
               
-              // Warna gradasi neon cyancat & biru untuk spectrum
               const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
               gradient.addColorStop(0, '#0284c7');
               gradient.addColorStop(1, '#38bdf8');
@@ -179,6 +189,37 @@
 
               x += barWidth + 1;
             }
+
+            // 2. Gambar Teks 'fatur62' yang terdorong oleh gerakan batang
+            ctx.font = 'bold 16px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+
+            const startX = canvas.width / 2 - (letters.length * 15) / 2 + 7;
+
+            letters.forEach((item, index) => {
+              const freqValue = dataArray[item.targetBin] || 0;
+              
+              // Hitung seberapa tinggi batang mendorong huruf
+              const pushHeight = (freqValue / 255) * 22; // Maksimal terdorong 22px ke atas
+              
+              // Efek Fisika: Terdorong cepat ke atas, lalu turun pelan (smooth gravity)
+              if (pushHeight > item.yOffset) {
+                item.yOffset = pushHeight;
+              } else {
+                item.yOffset *= 0.85; // Gravitasi turun
+              }
+
+              const letterX = startX + (index * 17);
+              const defaultY = canvas.height - 12; 
+              const currentY = defaultY - item.yOffset; // Huruf terdorong ke atas
+
+              // Efek Warna Huruf Terang Putih / Cyan saat terdorong
+              ctx.fillStyle = item.yOffset > 5 ? '#38bdf8' : '#ffffff';
+              ctx.shadowColor = item.yOffset > 5 ? 'rgba(56, 189, 248, 0.8)' : 'transparent';
+              ctx.shadowBlur = item.yOffset > 5 ? 8 : 0;
+
+              ctx.fillText(item.char, letterX, currentY);
+            });
           }
 
           renderFrame();
