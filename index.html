@@ -10,7 +10,43 @@
     
     /* Header Judul & Subtitle */
     .header-container { text-align: center; margin-bottom: 30px; }
+    
+    .header-title-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     h1 { color: #38bdf8; margin: 0; font-size: 28px; }
+
+    /* 🏷️ BADGE JUMLAH LAGU ESTETIS 🏷️ */
+    .song-count-badge {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 4px 10px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .count-label {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .count-num {
+      background: #0284c7;
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
     .subtitle { 
       color: #ffffff; 
       font-size: 15px; 
@@ -76,12 +112,19 @@
 <body>
 
   <div class="header-container">
-    <h1>🎵 Koleksi Musik Suno AI</h1>
+    <div class="header-title-wrapper">
+      <h1>🎵 Koleksi Musik Suno AI</h1>
+      
+      <div class="song-count-badge">
+        <span class="count-label">Jumlah Lagu</span>
+        <span id="total-songs-count" class="count-num">0</span>
+      </div>
+    </div>
+
     <div class="subtitle">by fatur62</div>
     
-    <!-- Box Deskripsi Website Estetis -->
     <div class="web-description-box">
-      Selamat datang! Wadah platform pemutar musik buatan Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik dan audio spectrum visualizer,serta download mp3 nya.
+      Selamat datang! Wadah platform pemutar musik buatan Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik dan audio spectrum visualizer.
     </div>
   </div>
 
@@ -101,6 +144,7 @@
 
     async function loadSongs() {
       const container = document.getElementById('song-list');
+      const countSpan = document.getElementById('total-songs-count');
       
       const { data: songs, error } = await _supabase
         .from('songs')
@@ -109,13 +153,18 @@
 
       if (error) {
         container.innerHTML = `<p style="color:#ef4444; text-align:center; grid-column: 1/-1;">Gagal memuat lagu: ${error.message}</p>`;
+        countSpan.innerText = '0';
         return;
       }
 
       if (!songs || songs.length === 0) {
         container.innerHTML = `<p style="text-align:center; grid-column: 1/-1; color: #94a3b8; font-size: 16px; margin-top: 30px;">🎵 Belum ada lagu yang ditambahkan.</p>`;
+        countSpan.innerText = '0';
         return;
       }
+
+      // Update angka jumlah lagu secara otomatis!
+      countSpan.innerText = songs.length;
 
       container.innerHTML = songs.map(song => `
         <div class="card">
@@ -126,7 +175,6 @@
             <div class="title">${song.title}</div>
             <div class="genre">${song.genre}</div>
             
-            <!-- Canvas Visualizer dengan Teks Terpental -->
             <canvas id="canvas-${song.id}" class="visualizer-canvas" width="300" height="60"></canvas>
 
             <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="initSpectrum(${song.id})"></audio>
