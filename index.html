@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     html { scroll-behavior: smooth; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px 20px 100px 20px; }
     
     /* Header Judul & Subtitle */
     .header-container { text-align: center; margin-bottom: 30px; }
@@ -123,7 +123,7 @@
       border-color: #38bdf8;
     }
 
-    /* 🔍 STYLING FITUR SEARCH & FILTER GENRE 🔍 */
+    /* 🔍 KONTROL SEARCH & FILTER GENRE 🔍 */
     .search-filter-container {
       max-width: 600px;
       margin: 25px auto 25px auto;
@@ -218,7 +218,8 @@
     .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; }
     
     /* Kartu Lagu */
-    .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
+    .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; transition: transform 0.3s ease, border-color 0.3s ease; border: 1px solid transparent; }
+    .card.active-playing { border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
     
     /* Ukuran Cover Kompak */
     .cover-container { text-align: center; width: 100%; margin-bottom: 12px; }
@@ -241,12 +242,147 @@
 
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
     
-    .btn-container { display: flex; gap: 8px; margin-top: 12px; }
-    .btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
+    .btn-container { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+    .btn { flex: 1; min-width: 70px; padding: 8px 4px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
     .btn-download { background: #0284c7; color: #fff; }
     .btn-lyrics { background: #334155; color: #38bdf8; }
+    .btn-share { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .btn-share:hover { background: #0284c7; color: #fff; }
     
     .lyrics-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
+
+    /* 🎧 STICKY BOTTOM AUDIO PLAYER MELAYANG 🎧 */
+    .bottom-player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+    }
+
+    .bottom-player.show {
+      transform: translateY(0);
+    }
+
+    .player-track-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 200px;
+    }
+
+    .player-cover {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .player-details {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .player-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-genre {
+      font-size: 11px;
+      color: #38bdf8;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .player-btn:hover {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+
+    .player-progress-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 500px;
+    }
+
+    .player-time {
+      font-size: 11px;
+      color: #94a3b8;
+      min-width: 35px;
+      text-align: center;
+    }
+
+    .player-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      outline: none;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+
+    /* Toast Notification Share */
+    .toast-notify {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #0284c7;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+    }
+    .toast-notify.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -297,6 +433,32 @@
     <p style="text-align: center; grid-column: 1/-1; color: #94a3b8;">⏳ Memuat lagu...</p>
   </div>
 
+  <!-- 🎧 STICKY BOTTOM AUDIO PLAYER HTML 🎧 -->
+  <div id="bottomPlayer" class="bottom-player">
+    <div class="player-track-info">
+      <img id="playerCover" src="" class="player-cover" alt="Cover">
+      <div class="player-details">
+        <div id="playerTitle" class="player-title">-</div>
+        <div id="playerGenre" class="player-genre">-</div>
+      </div>
+    </div>
+
+    <div class="player-controls">
+      <button class="player-btn" onclick="playPrevSong()" title="Lagu Sebelumnya">⏮</button>
+      <button id="playerPlayBtn" class="player-btn" onclick="togglePlayPause()" title="Play/Pause">▶</button>
+      <button class="player-btn" onclick="playNextSong()" title="Lagu Selanjutnya">⏭</button>
+    </div>
+
+    <div class="player-progress-container">
+      <span id="playerCurrentTime" class="player-time">0:00</span>
+      <input type="range" id="playerProgressBar" class="player-progress-bar" value="0" min="0" max="100">
+      <span id="playerTotalTime" class="player-time">0:00</span>
+    </div>
+  </div>
+
+  <!-- Toast Notifikasi Copy Link -->
+  <div id="toast" class="toast-notify">🔗 Link lagu berhasil disalin!</div>
+
   <script>
     const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
@@ -310,21 +472,23 @@
     let searchQuery = '';
     let searchDebounce = null;
     let allGenreSet = new Set();
+    
+    // Global State Player
+    let currentSongsList = [];
+    let currentPlayingIndex = -1;
+    let activeAudioElement = null;
 
     async function loadSongs() {
       const container = document.getElementById('song-list');
       const countSpan = document.getElementById('total-songs-count');
       const indexContainer = document.getElementById('songs-index-list');
       
-      // Query Dasar Supabase
       let query = _supabase.from('songs').select('*');
 
-      // Filter Genre jika bukan 'all'
       if (currentGenre !== 'all') {
         query = query.ilike('genre', `%${currentGenre}%`);
       }
 
-      // Filter Pencarian Text (Judul, Genre, atau Lirik)
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,genre.ilike.%${searchQuery}%,lyrics.ilike.%${searchQuery}%`);
       }
@@ -345,23 +509,21 @@
         return;
       }
 
-      // Ekstrak & Render Genre Chips (hanya saat awal muat tanpa filter pencarian)
+      currentSongsList = songs;
+
       if (currentGenre === 'all' && !searchQuery) {
         updateGenreChips(songs);
       }
 
-      // Update Angka Jumlah Lagu
       countSpan.innerText = songs.length;
 
-      // Update Daftar Isi Judul Lagu
       indexContainer.innerHTML = songs.map((song) => `
         <a href="#card-${song.id}" class="index-item">
           🎵 ${song.title}
         </a>
       `).join('');
 
-      // Render Kartu Lagu
-      container.innerHTML = songs.map(song => `
+      container.innerHTML = songs.map((song, index) => `
         <div class="card" id="card-${song.id}">
           <div class="cover-container">
             <img class="cover" src="${song.cover_url}" alt="${song.title}">
@@ -372,27 +534,163 @@
             
             <canvas id="canvas-${song.id}" class="visualizer-canvas" width="300" height="60"></canvas>
 
-            <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="initSpectrum(${song.id})"></audio>
+            <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="handleSongPlay(${index})"></audio>
             
             <div class="btn-container">
-              <a class="btn btn-download" href="${song.audio_url}" download target="_blank">Download MP3</a>
+              <a class="btn btn-download" href="${song.audio_url}" download target="_blank">📥 MP3</a>
               ${song.lyrics ? `<button class="btn btn-lyrics" onclick="toggleLyrics(${song.id})">📄 Lirik</button>` : ''}
+              <button class="btn btn-share" onclick="shareSongLink(${song.id})">🔗 Share</button>
             </div>
             
             ${song.lyrics ? `<div id="lyrics-${song.id}" class="lyrics-box">${song.lyrics}</div>` : ''}
           </div>
         </div>
       `).join('');
+
+      // Auto Highlight jika ada Hash URL (#card-ID)
+      checkUrlHashHighlight();
     }
 
-    // Fungsi Render Genre Chips Otomatis
+    // 🔄 AUTOPLAY & INTEGRASI STICKY PLAYER 🔄
+    function handleSongPlay(index) {
+      const song = currentSongsList[index];
+      if (!song) return;
+
+      currentPlayingIndex = index;
+
+      // Hentikan audio lain yang sedang berputar
+      document.querySelectorAll('audio').forEach((aud, i) => {
+        if (i !== index) aud.pause();
+      });
+
+      // Hilangkan status active card dari kartu lain
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('active-playing'));
+      const activeCard = document.getElementById(`card-${song.id}`);
+      if (activeCard) activeCard.classList.add('active-playing');
+
+      activeAudioElement = document.getElementById(`audio-${song.id}`);
+
+      // Inisialisasi Visualizer fatur62
+      initSpectrum(song.id);
+
+      // Synchronize data ke Bottom Player Bar
+      document.getElementById('playerCover').src = song.cover_url;
+      document.getElementById('playerTitle').innerText = song.title;
+      document.getElementById('playerGenre').innerText = song.genre;
+      document.getElementById('playerPlayBtn').innerText = '⏸';
+      document.getElementById('bottomPlayer').classList.add('show');
+
+      // Bind Listener Progress Bar & End Autoplay
+      activeAudioElement.ontimeupdate = updatePlayerProgress;
+      activeAudioElement.onended = () => {
+        playNextSong(); // 🔄 AUTOPLAY LAGU SELANJUTNYA
+      };
+    }
+
+    function togglePlayPause() {
+      if (!activeAudioElement) return;
+      if (activeAudioElement.paused) {
+        activeAudioElement.play();
+        document.getElementById('playerPlayBtn').innerText = '⏸';
+      } else {
+        activeAudioElement.pause();
+        document.getElementById('playerPlayBtn').innerText = '▶';
+      }
+    }
+
+    function playNextSong() {
+      if (currentSongsList.length === 0) return;
+      let nextIndex = currentPlayingIndex + 1;
+      if (nextIndex >= currentSongsList.length) nextIndex = 0; // Loop kembali ke lagu pertama
+      
+      const nextSong = currentSongsList[nextIndex];
+      const nextAudio = document.getElementById(`audio-${nextSong.id}`);
+      if (nextAudio) {
+        nextAudio.play();
+        document.getElementById(`card-${nextSong.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function playPrevSong() {
+      if (currentSongsList.length === 0) return;
+      let prevIndex = currentPlayingIndex - 1;
+      if (prevIndex < 0) prevIndex = currentSongsList.length - 1; // Loop ke lagu paling bawah
+      
+      const prevSong = currentSongsList[prevIndex];
+      const prevAudio = document.getElementById(`audio-${prevSong.id}`);
+      if (prevAudio) {
+        prevAudio.play();
+        document.getElementById(`card-${prevSong.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function updatePlayerProgress() {
+      if (!activeAudioElement) return;
+
+      const currentTime = activeAudioElement.currentTime;
+      const duration = activeAudioElement.duration || 0;
+
+      const progressBar = document.getElementById('playerProgressBar');
+      const currentTimeSpan = document.getElementById('playerCurrentTime');
+      const totalTimeSpan = document.getElementById('playerTotalTime');
+
+      if (duration > 0) {
+        progressBar.value = (currentTime / duration) * 100;
+        currentTimeSpan.innerText = formatTime(currentTime);
+        totalTimeSpan.innerText = formatTime(duration);
+      }
+    }
+
+    // Seek lagu dari progress bar bottom player
+    document.getElementById('playerProgressBar').addEventListener('input', (e) => {
+      if (activeAudioElement && activeAudioElement.duration) {
+        const seekTime = (e.target.value / 100) * activeAudioElement.duration;
+        activeAudioElement.currentTime = seekTime;
+      }
+    });
+
+    function formatTime(seconds) {
+      const min = Math.floor(seconds / 60);
+      const sec = Math.floor(seconds % 60);
+      return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    // 🔗 FITUR SHARE LINK LAGU 🔗
+    function shareSongLink(id) {
+      const shareUrl = `${window.location.origin}${window.location.pathname}#card-${id}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showToast('🔗 Link lagu berhasil disalin!');
+      }).catch(() => {
+        showToast('❌ Gagal menyalin link.');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function checkUrlHashHighlight() {
+      if (window.location.hash) {
+        const targetCard = document.querySelector(window.location.hash);
+        if (targetCard) {
+          setTimeout(() => {
+            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetCard.classList.add('active-playing');
+          }, 400);
+        }
+      }
+    }
+
+    // Render Genre Chips Otomatis
     function updateGenreChips(songs) {
       const pillsContainer = document.getElementById('genrePills');
       allGenreSet.clear();
 
       songs.forEach(song => {
         if (song.genre) {
-          // Menangani jika genre dipisah koma (misal: Pop, Rock)
           song.genre.split(',').forEach(g => allGenreSet.add(g.trim()));
         }
       });
@@ -406,7 +704,6 @@
       pillsContainer.innerHTML = chipsHTML;
     }
 
-    // Handler Klik Chip Genre
     function setGenreFilter(genre, element) {
       currentGenre = genre;
       document.querySelectorAll('.genre-chip').forEach(btn => btn.classList.remove('active'));
@@ -414,7 +711,7 @@
       loadSongs();
     }
 
-    // Event Listener Search Bar Real-time
+    // Event Search Bar
     document.addEventListener('DOMContentLoaded', () => {
       const searchInput = document.getElementById('searchInput');
       const clearBtn = document.getElementById('clearSearch');
@@ -449,6 +746,8 @@
     function initSpectrum(id) {
       const audio = document.getElementById(`audio-${id}`);
       const canvas = document.getElementById(`canvas-${id}`);
+      if (!audio || !canvas) return;
+      
       const ctx = canvas.getContext('2d');
 
       if (!audioCtx) {
