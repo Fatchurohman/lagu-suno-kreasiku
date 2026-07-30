@@ -6,6 +6,7 @@
   <title>Koleksi Musik Suno AI</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    html { scroll-behavior: smooth; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
     
     /* Header Judul & Subtitle */
@@ -74,6 +75,54 @@
       backdrop-filter: blur(5px);
     }
 
+    /* 📋 BOX DAFTAR ISI JUDUL LAGU 📋 */
+    .playlist-index-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px dashed rgba(56, 189, 248, 0.3);
+      border-radius: 10px;
+      padding: 14px;
+      max-width: 600px;
+      margin: 15px auto 0 auto;
+      text-align: left;
+    }
+    .index-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .index-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 120px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .index-item {
+      background: #1e293b;
+      color: #e2e8f0;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid #334155;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .index-item:hover {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+
     /* Grid Kartu Lagu */
     .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; }
     
@@ -115,6 +164,7 @@
     <div class="header-title-wrapper">
       <h1>🎵 Koleksi Musik Suno AI</h1>
       
+      <!-- Badge Jumlah Lagu -->
       <div class="song-count-badge">
         <span class="count-label">Jumlah Lagu</span>
         <span id="total-songs-count" class="count-num">0</span>
@@ -123,8 +173,17 @@
 
     <div class="subtitle">by fatur62</div>
     
+    <!-- Box Deskripsi Website -->
     <div class="web-description-box">
       Selamat datang! Wadah platform pemutar musik buatan Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik dan audio spectrum visualizer.
+      
+      <!-- 📋 DAFTAR ISI JUDUL LAGU (OTOMATIS) 📋 -->
+      <div class="playlist-index-box">
+        <div class="index-title">📌 Daftar Judul Lagu:</div>
+        <div id="songs-index-list" class="index-list">
+          <span style="font-size: 11px; color: #94a3b8;">Memuat daftar lagu...</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -145,6 +204,7 @@
     async function loadSongs() {
       const container = document.getElementById('song-list');
       const countSpan = document.getElementById('total-songs-count');
+      const indexContainer = document.getElementById('songs-index-list');
       
       const { data: songs, error } = await _supabase
         .from('songs')
@@ -154,20 +214,30 @@
       if (error) {
         container.innerHTML = `<p style="color:#ef4444; text-align:center; grid-column: 1/-1;">Gagal memuat lagu: ${error.message}</p>`;
         countSpan.innerText = '0';
+        indexContainer.innerHTML = `<span style="color:#ef4444; font-size:11px;">Gagal memuat daftar.</span>`;
         return;
       }
 
       if (!songs || songs.length === 0) {
         container.innerHTML = `<p style="text-align:center; grid-column: 1/-1; color: #94a3b8; font-size: 16px; margin-top: 30px;">🎵 Belum ada lagu yang ditambahkan.</p>`;
         countSpan.innerText = '0';
+        indexContainer.innerHTML = `<span style="color:#94a3b8; font-size:11px;">Belum ada lagu.</span>`;
         return;
       }
 
-      // Update angka jumlah lagu secara otomatis!
+      // Update Angka Jumlah Lagu
       countSpan.innerText = songs.length;
 
+      // Update Daftar Isi Judul Lagu
+      indexContainer.innerHTML = songs.map((song, i) => `
+        <a href="#card-${song.id}" class="index-item">
+          🎵 ${song.title}
+        </a>
+      `).join('');
+
+      // Render Kartu Lagu
       container.innerHTML = songs.map(song => `
-        <div class="card">
+        <div class="card" id="card-${song.id}">
           <div class="cover-container">
             <img class="cover" src="${song.cover_url}" alt="${song.title}">
           </div>
