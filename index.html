@@ -655,14 +655,27 @@
       return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-    // 🔗 FITUR SHARE LINK LAGU 🔗
+        // 🔗 FITUR SHARE LINK LAGU (HYBRID HP & LAPTOP) 🔗
     function shareSongLink(id) {
+      const song = currentSongsList.find(s => s.id === id);
+      const songTitle = song ? song.title : 'Lagu Suno AI';
       const shareUrl = `${window.location.origin}${window.location.pathname}#card-${id}`;
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        showToast('🔗 Link lagu berhasil disalin!');
-      }).catch(() => {
-        showToast('❌ Gagal menyalin link.');
-      });
+
+      // 📱 Jika dibuka di HP (pakai Web Share API / Quick Share)
+      if (navigator.share) {
+        navigator.share({
+          title: `🎵 ${songTitle} - Koleksi Musik Suno AI (by fatur62)`,
+          text: `Dengarkan lagu "${songTitle}" di Koleksi Musik Suno AI by fatur62!`,
+          url: shareUrl
+        }).catch((err) => console.log('Share dibatalkan:', err));
+      } else {
+        // 💻 Jika dibuka di Laptop/PC (Fallback Copy Link biasa)
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showToast('🔗 Link lagu berhasil disalin!');
+        }).catch(() => {
+          showToast('❌ Gagal menyalin link.');
+        });
+      }
     }
 
     function showToast(msg) {
