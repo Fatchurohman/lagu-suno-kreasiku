@@ -280,7 +280,7 @@
       document.getElementById('editModal').classList.remove('show');
     }
 
-    // 4. UPDATE DATA LAGU (EDIT)
+        // 4. UPDATE DATA LAGU (EDIT) - FIXED URL SCOPING
     async function updateLagu() {
       const id = document.getElementById('edit_id').value;
       const title = document.getElementById('edit_title').value.trim();
@@ -290,6 +290,7 @@
       const coverFileInput = document.getElementById('edit_cover_file');
       const audioFileInput = document.getElementById('edit_audio_file');
       
+      // Gunakan 'let' agar nilainya bisa diperbarui jika ada file baru
       let cover_url = document.getElementById('edit_old_cover').value;
       let audio_url = document.getElementById('edit_old_audio').value;
 
@@ -315,10 +316,16 @@
         if (coverFileInput.files.length > 0) {
           const coverFile = coverFileInput.files[0];
           const coverPath = `covers/${timestamp}_${sanitizeFileName(coverFile.name)}`;
-          const { error: coverError } = await _supabase.storage.from('lagu-suno').upload(coverPath, coverFile, { cacheControl: '3600', upsert: true });
+          
+          const { error: coverError } = await _supabase
+            .storage
+            .from('lagu-suno')
+            .upload(coverPath, coverFile, { cacheControl: '3600', upsert: true });
+
           if (coverError) throw new Error('Gagal upload cover baru: ' + coverError.message);
           
           const { data: coverUrlData } = _supabase.storage.from('lagu-suno').getPublicUrl(coverPath);
+          // Update variabel cover_url utama
           cover_url = coverUrlData.publicUrl;
         }
 
@@ -326,10 +333,16 @@
         if (audioFileInput.files.length > 0) {
           const audioFile = audioFileInput.files[0];
           const audioPath = `audio/${timestamp}_${sanitizeFileName(audioFile.name)}`;
-          const { error: audioError } = await _supabase.storage.from('lagu-suno').upload(audioPath, audioFile, { cacheControl: '3600', upsert: true });
+          
+          const { error: audioError } = await _supabase
+            .storage
+            .from('lagu-suno')
+            .upload(audioPath, audioFile, { cacheControl: '3600', upsert: true });
+
           if (audioError) throw new Error('Gagal upload audio baru: ' + audioError.message);
 
           const { data: audioUrlData } = _supabase.storage.from('lagu-suno').getPublicUrl(audioPath);
+          // Update variabel audio_url utama
           audio_url = audioUrlData.publicUrl;
         }
 
@@ -357,6 +370,7 @@
         btnUpdate.innerText = 'Simpan Perubahan';
       }
     }
+
 
     // 5. HAPUS LAGU
     async function hapusLagu(id, title) {
