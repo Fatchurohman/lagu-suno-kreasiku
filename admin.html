@@ -7,8 +7,29 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #fff; padding: 20px; max-width: 900px; margin: auto; }
-    h1 { text-align: center; color: #38bdf8; margin-bottom: 25px; }
+    h1 { text-align: center; color: #38bdf8; margin-bottom: 15px; }
     
+    /* Styling Tombol Preview Website Utama */
+    .btn-preview {
+      display: inline-block;
+      background: #0284c7;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      border: 1px solid #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+      transition: all 0.3s ease;
+    }
+    .btn-preview:hover {
+      background: #38bdf8;
+      color: #0f172a;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+      transform: translateY(-2px);
+    }
+
     .card { background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-bottom: 30px; border: 1px solid rgba(56, 189, 248, 0.2); }
     h2 { color: #38bdf8; margin-top: 0; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
     
@@ -46,6 +67,13 @@
 <body>
 
   <h1>🎵 Panel Admin Suno AI (by fatur62)</h1>
+
+  <!-- TOMBOL PINTAS KE WEBSITE UTAMA -->
+  <div style="text-align: center; margin-bottom: 25px;">
+    <a href="index.html" target="_blank" class="btn-preview">
+      🌐 Lihat Website Utama (Live Site) ↗
+    </a>
+  </div>
 
   <!-- FORM TAMBAH LAGU -->
   <div class="card">
