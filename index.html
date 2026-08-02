@@ -50,12 +50,48 @@
 
     .subtitle { 
       color: #ffffff; 
-      font-size: 15px; 
+      font-size: 16px; 
       font-style: italic; 
       font-family: 'Georgia', 'Trebuchet MS', serif; 
-      margin-top: 5px; 
+      margin-top: 10px; 
       letter-spacing: 1.5px;
       opacity: 0.95;
+    }
+
+    /* 🚀 EFEK ANIMASI MANTUL TINGGI FATUR62 🚀 */
+    .brand-fatur {
+      display: inline-block;
+      font-weight: 900;
+      font-size: 26px;
+      color: #38bdf8;
+      text-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+    }
+
+    .brand-fatur span {
+      display: inline-block;
+      animation: superBounce 1.2s infinite ease-in-out;
+    }
+
+    /* Delay tiap karakter biar efek gelombangnya berurutan sampai angka 2 */
+    .brand-fatur span:nth-child(1) { animation-delay: 0.0s; } /* f */
+    .brand-fatur span:nth-child(2) { animation-delay: 0.1s; } /* a */
+    .brand-fatur span:nth-child(3) { animation-delay: 0.2s; } /* t */
+    .brand-fatur span:nth-child(4) { animation-delay: 0.3s; } /* u */
+    .brand-fatur span:nth-child(5) { animation-delay: 0.4s; } /* r */
+    .brand-fatur span:nth-child(6) { animation-delay: 0.5s; } /* 6 */
+    .brand-fatur span:nth-child(7) { animation-delay: 0.6s; } /* 2 */
+
+    /* Keyframe Lompatan Ditinggikan ke -18px */
+    @keyframes superBounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-18px); /* Pantulan utama lebih tinggi */
+      }
+      60% {
+        transform: translateY(-6px);  /* Pantulan kenyal kedua */
+      }
     }
     
     /* 📦 BOX DESKRIPSI WEBSITE ESTETIS 📦 */
@@ -398,11 +434,16 @@
       </div>
     </div>
 
-    <div class="subtitle">by fatur62</div>
+    <!-- SUBTITLE DENGAN EFEK MEMANTUL TINGGI DAN KENYAL PER HURUF -->
+    <div class="subtitle">
+      by <div class="brand-fatur">
+        <span>f</span><span>a</span><span>t</span><span>u</span><span>r</span><span>6</span><span>2</span>
+      </div>
+    </div>
     
     <!-- Box Deskripsi Website -->
     <div class="web-description-box">
-      Selamat datang di Wadah platform pemutar musik Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik,audio spectrum visualizer,download,dan share.
+      Selamat datang di Wadah platform pemutar musik Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik, audio spectrum visualizer, download, dan share.
       
       <!-- 📋 DAFTAR ISI JUDUL LAGU (OTOMATIS) 📋 -->
       <div class="playlist-index-box">
@@ -655,13 +696,12 @@
       return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-        // 🔗 FITUR SHARE LINK LAGU (HYBRID HP & LAPTOP) 🔗
+    // 🔗 FITUR SHARE LINK LAGU (HYBRID HP & LAPTOP) 🔗
     function shareSongLink(id) {
       const song = currentSongsList.find(s => s.id === id);
       const songTitle = song ? song.title : 'Lagu Suno AI';
       const shareUrl = `${window.location.origin}${window.location.pathname}#card-${id}`;
 
-      // 📱 Jika dibuka di HP (pakai Web Share API / Quick Share)
       if (navigator.share) {
         navigator.share({
           title: `🎵 ${songTitle} - Koleksi Musik Suno AI (by fatur62)`,
@@ -669,7 +709,6 @@
           url: shareUrl
         }).catch((err) => console.log('Share dibatalkan:', err));
       } else {
-        // 💻 Jika dibuka di Laptop/PC (Fallback Copy Link biasa)
         navigator.clipboard.writeText(shareUrl).then(() => {
           showToast('🔗 Link lagu berhasil disalin!');
         }).catch(() => {
@@ -786,10 +825,14 @@
 
           const text = "fatur62";
           const letters = text.split('').map((char, index) => {
+            // Distribusi audio bin agar angka 2 ikut responsif pada frekuensi nada tinggi
+            let binIndex = Math.floor((index + 1) * (bufferLength / (text.length + 1)));
+            if (char === '2') binIndex = Math.min(binIndex, bufferLength - 2); 
+
             return {
               char: char,
               yOffset: 0,
-              targetBin: Math.floor((index + 1) * (bufferLength / (text.length + 2)))
+              targetBin: binIndex
             };
           });
 
@@ -823,8 +866,10 @@
 
             letters.forEach((item, index) => {
               const freqValue = dataArray[item.targetBin] || 0;
-              const pushHeight = (freqValue / 255) * 22;
-              
+              // Sensitivitas ekstra ditinggikan (porsi loncat sampai 28px)
+              let pushHeight = (freqValue / 255) * 28;
+              if (item.char === '2' && pushHeight < 8 && freqValue > 30) pushHeight = 12;
+
               if (pushHeight > item.yOffset) {
                 item.yOffset = pushHeight;
               } else {
