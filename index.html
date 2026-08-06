@@ -242,9 +242,31 @@
 
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
     
-    .btn-container { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-    .btn-mp3-wrapper { flex: 1; min-width: 60px; }
-    .btn { width: 100%; min-width: 60px; padding: 8px 4px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; }
+    /* GRID TOMBOL DENGAN PORSI SPESIAL UNTUK DOWNLOAD MP3 */
+    .btn-container { 
+      display: grid; 
+      grid-template-columns: 1.4fr 1fr 1fr 1fr; 
+      gap: 6px; 
+      margin-top: 12px; 
+    }
+    .btn-mp3-wrapper { width: 100%; }
+    .btn { 
+      width: 100%; 
+      padding: 8px 2px; 
+      border: none; 
+      border-radius: 6px; 
+      font-size: 11px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      text-align: center; 
+      text-decoration: none; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 3px; 
+      box-sizing: border-box; 
+      white-space: nowrap;
+    }
     .btn-download { background: #0284c7; color: #fff; }
     .btn-lyrics { background: #334155; color: #38bdf8; }
     .btn-comments { background: #059669; color: #fff; }
@@ -253,8 +275,8 @@
 
     /* 📥 STYLING KONFIRMASI DOWNLOAD INTERAKTIF 📥 */
     .dl-confirm-box { display: flex; gap: 4px; width: 100%; }
-    .btn-dl-yes { background: #10b981; color: #fff; border: none; padding: 8px 2px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; }
-    .btn-dl-no { background: #ef4444; color: #fff; border: none; padding: 8px 2px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; }
+    .btn-dl-yes { background: #10b981; color: #fff; border: none; padding: 8px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1.2; white-space: nowrap; }
+    .btn-dl-no { background: #ef4444; color: #fff; border: none; padding: 8px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 0.8; white-space: nowrap; }
     
     .lyrics-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
 
@@ -557,9 +579,9 @@
             <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="handleSongPlay(${index})"></audio>
             
             <div class="btn-container">
-              <!-- WADAH TOMBOL MP3 DOWNLOAD INTERAKTIF -->
+              <!-- WADAH TOMBOL DOWNLOAD MP3 INTERAKTIF -->
               <div id="mp3-box-${song.id}" class="btn-mp3-wrapper">
-                <button class="btn btn-download" onclick="triggerDownload('${song.id}', '${song.audio_url}', '${escapeQuotes(song.title)}')">📥 MP3</button>
+                <button class="btn btn-download" onclick="triggerDownload('${song.id}', '${song.audio_url}', '${escapeQuotes(song.title)}')">📥 Download MP3</button>
               </div>
 
               ${song.lyrics ? `<button class="btn btn-lyrics" onclick="toggleLyrics(${song.id})">📄 Lirik</button>` : ''}
@@ -599,7 +621,7 @@
         box.innerHTML = `
           <div class="dl-confirm-box">
             <button class="btn-dl-yes" onclick="executeDownload('${songUrl}', '${songTitle}', '${songId}')">⬇️ Jadi Download</button>
-            <button class="btn-dl-no" onclick="cancelDownload('${songId}', '${songUrl}', '${songTitle}')">❌ Cancel</button>
+            <button class="btn-dl-no" onclick="cancelDownload('${songId}', '${songUrl}', '${songTitle}')">❌ Batal</button>
           </div>
         `;
       }
@@ -620,7 +642,7 @@
       const box = document.getElementById(`mp3-box-${songId}`);
       if (box) {
         box.innerHTML = `
-          <button class="btn btn-download" onclick="triggerDownload('${songId}', '${url}', '${escapeQuotes(title)}')">📥 MP3</button>
+          <button class="btn btn-download" onclick="triggerDownload('${songId}', '${url}', '${escapeQuotes(title)}')">📥 Download MP3</button>
         `;
       }
     }
