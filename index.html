@@ -243,12 +243,18 @@
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
     
     .btn-container { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-    .btn { flex: 1; min-width: 60px; padding: 8px 4px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+    .btn-mp3-wrapper { flex: 1; min-width: 60px; }
+    .btn { width: 100%; min-width: 60px; padding: 8px 4px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; }
     .btn-download { background: #0284c7; color: #fff; }
     .btn-lyrics { background: #334155; color: #38bdf8; }
     .btn-comments { background: #059669; color: #fff; }
     .btn-share { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
     .btn-share:hover { background: #0284c7; color: #fff; }
+
+    /* 📥 STYLING KONFIRMASI DOWNLOAD INTERAKTIF 📥 */
+    .dl-confirm-box { display: flex; gap: 4px; width: 100%; }
+    .btn-dl-yes { background: #10b981; color: #fff; border: none; padding: 8px 2px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; }
+    .btn-dl-no { background: #ef4444; color: #fff; border: none; padding: 8px 2px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1; }
     
     .lyrics-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
 
@@ -551,7 +557,11 @@
             <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="handleSongPlay(${index})"></audio>
             
             <div class="btn-container">
-              <a class="btn btn-download" href="${song.audio_url}" download target="_blank">📥 MP3</a>
+              <!-- WADAH TOMBOL MP3 DOWNLOAD INTERAKTIF -->
+              <div id="mp3-box-${song.id}" class="btn-mp3-wrapper">
+                <button class="btn btn-download" onclick="triggerDownload('${song.id}', '${song.audio_url}', '${escapeQuotes(song.title)}')">📥 MP3</button>
+              </div>
+
               ${song.lyrics ? `<button class="btn btn-lyrics" onclick="toggleLyrics(${song.id})">📄 Lirik</button>` : ''}
               <button class="btn btn-comments" onclick="toggleComments(${song.id})">💬 Pesan (<span id="cmt-count-${song.id}">0</span>)</button>
               <button class="btn btn-share" onclick="shareSongLink(${song.id})">🔗 Share</button>
@@ -580,6 +590,43 @@
 
       // Load jumlah pesan untuk setiap lagu
       songs.forEach(song => fetchCommentsCount(song.id));
+    }
+
+    // 📥 LOGIKA SCRIPT FITUR MP3 DOWNLOAD INTERAKTIF 📥
+    function triggerDownload(songId, songUrl, songTitle) {
+      const box = document.getElementById(`mp3-box-${songId}`);
+      if (box) {
+        box.innerHTML = `
+          <div class="dl-confirm-box">
+            <button class="btn-dl-yes" onclick="executeDownload('${songUrl}', '${songTitle}', '${songId}')">⬇️ Jadi Download</button>
+            <button class="btn-dl-no" onclick="cancelDownload('${songId}', '${songUrl}', '${songTitle}')">❌ Cancel</button>
+          </div>
+        `;
+      }
+    }
+
+    function executeDownload(url, title, songId) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title}.mp3`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      cancelDownload(songId, url, title);
+    }
+
+    function cancelDownload(songId, url, title) {
+      const box = document.getElementById(`mp3-box-${songId}`);
+      if (box) {
+        box.innerHTML = `
+          <button class="btn btn-download" onclick="triggerDownload('${songId}', '${url}', '${escapeQuotes(title)}')">📥 MP3</button>
+        `;
+      }
+    }
+
+    function escapeQuotes(str) {
+      return str ? str.replace(/'/g, "\\'") : '';
     }
 
     // 💬 LOGIKA SCRIPT FITUR PESAN PENDENGAR 💬
