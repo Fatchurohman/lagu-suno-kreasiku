@@ -242,14 +242,44 @@
 
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
     
-    .btn-container { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-    .btn { flex: 1; min-width: 60px; padding: 8px 4px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+    /* GRID TOMBOL DENGAN LEBAR PROPORSIONAL UNTUK TEKS DOWNLOAD MP3 */
+    .btn-container { 
+      display: grid; 
+      grid-template-columns: 1.4fr 1fr 1fr 1fr; 
+      gap: 6px; 
+      margin-top: 12px; 
+    }
+    .btn { 
+      width: 100%; 
+      padding: 8px 4px; 
+      border: none; 
+      border-radius: 6px; 
+      font-size: 11px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      text-align: center; 
+      text-decoration: none; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 4px; 
+      box-sizing: border-box; 
+      white-space: nowrap;
+      transition: background 0.2s ease, opacity 0.2s ease;
+    }
     .btn-download { background: #0284c7; color: #fff; }
+    .btn-download:hover { background: #0369a1; }
+    .btn-download:disabled { opacity: 0.65; cursor: not-allowed; }
+    
     .btn-lyrics { background: #334155; color: #38bdf8; }
+    .btn-lyrics:hover { background: #475569; }
+    
     .btn-comments { background: #059669; color: #fff; }
+    .btn-comments:hover { background: #047857; }
+    
     .btn-share { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
     .btn-share:hover { background: #0284c7; color: #fff; }
-    
+
     .lyrics-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
 
     /* 💬 BOX PESAN PENDENGAR STYLING 💬 */
@@ -418,7 +448,7 @@
     <div class="web-description-box">
       Selamat datang di Wadah platform pemutar musik Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik, audio spectrum visualizer, download, share, dan pesan pendengar.
       
-      <!-- 📋 DAFTAR ISI JUDUL LAGU (OTOMATIS) 📋 -->
+      <!-- 📋 DAFTAR ISI JUDUL LAGU 📋 -->
       <div class="playlist-index-box">
         <div class="index-title">📌 Daftar Judul Lagu:</div>
         <div id="songs-index-list" class="index-list">
@@ -470,7 +500,7 @@
     </div>
   </div>
 
-  <!-- Toast Notifikasi Copy Link -->
+  <!-- Toast Notifikasi Copy Link & Download -->
   <div id="toast" class="toast-notify">🔗 Link lagu berhasil disalin!</div>
 
   <script>
@@ -533,25 +563,29 @@
 
       indexContainer.innerHTML = songs.map((song) => `
         <a href="#card-${song.id}" class="index-item">
-          🎵 ${song.title}
+          🎵 ${song.title || 'Tanpa Judul'}
         </a>
       `).join('');
 
       container.innerHTML = songs.map((song, index) => `
         <div class="card" id="card-${song.id}">
           <div class="cover-container">
-            <img class="cover" src="${song.cover_url}" alt="${song.title}">
+            <img class="cover" src="${song.cover_url || ''}" alt="${song.title || 'Cover Lagu'}">
           </div>
           <div class="info">
-            <div class="title">${song.title}</div>
-            <div class="genre">${song.genre}</div>
+            <div class="title">${song.title || 'Tanpa Judul'}</div>
+            <div class="genre">${song.genre || '-'}</div>
             
             <canvas id="canvas-${song.id}" class="visualizer-canvas" width="300" height="60"></canvas>
 
-            <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="handleSongPlay(${index})"></audio>
+            <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url || ''}" onplay="handleSongPlay(${index})"></audio>
             
             <div class="btn-container">
-              <a class="btn btn-download" href="${song.audio_url}" download target="_blank">📥 MP3</a>
+              <!-- TOMBOL DOWNLOAD MP3 1-KLIK LANGSUNG -->
+              <button id="dl-btn-${song.id}" class="btn btn-download" onclick="directDownloadMp3('${song.id}', '${song.audio_url || ''}', '${escapeQuotes(song.title || 'Lagu_Suno')}')">
+                📥 Download MP3
+              </button>
+
               ${song.lyrics ? `<button class="btn btn-lyrics" onclick="toggleLyrics(${song.id})">📄 Lirik</button>` : ''}
               <button class="btn btn-comments" onclick="toggleComments(${song.id})">💬 Pesan (<span id="cmt-count-${song.id}">0</span>)</button>
               <button class="btn btn-share" onclick="shareSongLink(${song.id})">🔗 Share</button>
@@ -575,14 +609,68 @@
         </div>
       `).join('');
 
-      // Auto Highlight jika ada Hash URL (#card-ID)
       checkUrlHashHighlight();
-
-      // Load jumlah pesan untuk setiap lagu
       songs.forEach(song => fetchCommentsCount(song.id));
     }
 
-    // 💬 LOGIKA SCRIPT FITUR PESAN PENDENGAR 💬
+    // 📥 LOGIKA DIRECT 1-CLICK MP3 DOWNLOAD 📥
+    async function directDownloadMp3(songId, audioUrl, songTitle) {
+      if (!audioUrl) {
+        showToast('❌ Link audio tidak valid.');
+        return;
+      }
+
+      const dlButton = document.getElementById(`dl-btn-${songId}`);
+      const originalText = '📥 Download MP3';
+
+      try {
+        if (dlButton) {
+          dlButton.disabled = true;
+          dlButton.innerHTML = '⏳ Unduh...';
+        }
+        showToast(`⏳ Mengunduh "${songTitle}"...`);
+
+        const response = await fetch(audioUrl);
+        if (!response.ok) throw new Error('Gagal mengambil file audio');
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        
+        const cleanFileName = (songTitle || 'Lagu_Suno').replace(/[/\\?%*:|"<>]/g, '_');
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = downloadUrl;
+        a.download = `${cleanFileName}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+        
+        showToast(`✅ Selesai mengunduh "${songTitle}"!`);
+      } catch (err) {
+        console.error('Download error:', err);
+        const a = document.createElement('a');
+        a.href = audioUrl;
+        a.download = `${songTitle || 'Lagu'}.mp3`;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('📥 Membuka file audio...');
+      } finally {
+        if (dlButton) {
+          dlButton.disabled = false;
+          dlButton.innerHTML = originalText;
+        }
+      }
+    }
+
+    function escapeQuotes(str) {
+      return str ? str.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
+    }
+
+    // 💬 LOGIKA FITUR PESAN PENDENGAR 💬
     function toggleComments(songId) {
       const el = document.getElementById(`comments-${songId}`);
       if (el) {
@@ -630,7 +718,7 @@
             <span>👤 ${c.name || 'Pendengar'}</span>
             <span class="comment-time">${formatDate(c.created_at)}</span>
           </div>
-          <div class="comment-text">${c.message}</div>
+          <div class="comment-text">${c.message || ''}</div>
         </div>
       `).join('');
     }
@@ -687,9 +775,9 @@
 
       initSpectrum(song.id);
 
-      document.getElementById('playerCover').src = song.cover_url;
-      document.getElementById('playerTitle').innerText = song.title;
-      document.getElementById('playerGenre').innerText = song.genre;
+      document.getElementById('playerCover').src = song.cover_url || '';
+      document.getElementById('playerTitle').innerText = song.title || 'Tanpa Judul';
+      document.getElementById('playerGenre').innerText = song.genre || '-';
       document.getElementById('playerPlayBtn').innerText = '⏸';
       document.getElementById('bottomPlayer').classList.add('show');
 
