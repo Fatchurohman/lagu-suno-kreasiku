@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Panel Kelola Lagu Suno</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #fff; padding: 20px; max-width: 900px; margin: auto; }
+    h1 { text-align: center; color: #38bdf8; margin-bottom: 15px; }
+    
+    .btn-preview {
+      display: inline-block;
+      background: #0284c7;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      border: 1px solid #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+      transition: all 0.3s ease;
+    }
+    .btn-preview:hover {
+      background: #38bdf8;
+      color: #0f172a;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .card { background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-bottom: 30px; border: 1px solid rgba(56, 189, 248, 0.2); }
+    h2 { color: #38bdf8; margin-top: 0; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    
+    label { display: block; margin-top: 14px; font-size: 13px; color: #94a3b8; font-weight: bold; }
+    input[type="text"], input[type="url"], textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
+    input[type="file"] { width: 100%; margin-top: 5px; padding: 8px; background: #0f172a; border-radius: 6px; border: 1px dashed #38bdf8; color: #cbd5e1; box-sizing: border-box; cursor: pointer; }
+    textarea { height: 90px; resize: vertical; font-family: inherit; }
+    
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: all 0.2s ease; }
+    .btn-primary { background: #0284c7; color: #fff; width: 100%; margin-top: 20px; font-size: 16px; padding: 12px; }
+    .btn-primary:hover { background: #0369a1; }
+    .btn-edit { background: #f59e0b; color: #000; font-size: 12px; }
+    .btn-edit:hover { background: #d97706; color: #fff; }
+    .btn-delete { background: #ef4444; color: #fff; font-size: 12px; }
+    .btn-delete:hover { background: #b91c1c; }
+    .btn-cancel { background: #475569; color: #fff; }
+
+    #status { margin-top: 15px; font-weight: bold; text-align: center; word-break: break-word; }
+
+    /* Modal Popup Edit */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: #1e293b; padding: 24px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; border: 1px solid #38bdf8; }
+
+    /* Daftar Lagu List */
+    .song-item { display: flex; align-items: center; justify-content: space-between; background: #0f172a; padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #334155; gap: 12px; }
+    .song-item-info { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; }
+    .song-item-cover { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; }
+    .song-item-text { overflow: hidden; }
+    .song-item-title { font-weight: bold; font-size: 15px; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-item-genre { font-size: 12px; color: #38bdf8; }
+    .song-item-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #0369a1; color: #bae6fd; margin-left: 6px; }
+    .song-actions { display: flex; gap: 6px; }
+
+    /* LRC Maker Tool Styling */
+    .lrc-tool-section { background: #0b1329; border: 1px solid #0284c7; border-radius: 8px; padding: 16px; margin-top: 20px; }
+    .lrc-controls { display: flex; gap: 8px; margin: 10px 0; }
+    .btn-tag { background: #16a34a; color: #fff; flex: 1; padding: 10px; font-size: 14px; }
+    .btn-tag:hover { background: #15803d; }
+    .sync-lines-wrapper { max-height: 180px; overflow-y: auto; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .sync-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 4px; font-size: 12px; background: #1e293b; }
+    .sync-row.current-active { background: #0284c7; color: #fff; font-weight: bold; }
+    .sync-row.tagged { border-left: 3px solid #16a34a; color: #94a3b8; }
+    .sync-time-tag { font-family: monospace; color: #38bdf8; min-width: 75px; }
+    .sync-row.current-active .sync-time-tag { color: #fff; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <h1>🎵 Panel Admin Suno AI (by fatur62)</h1>
+
+  <!-- TOMBOL PINTAS KE WEBSITE UTAMA -->
+  <div style="text-align: center; margin-bottom: 25px;">
+    <a href="index.html" target="_blank" class="btn-preview">
+      🌐 Lihat Website Utama (Live Site) ↗
+    </a>
+  </div>
+
+  <!-- MINI-TOOL: LRC SYNC GENERATOR -->
+  <div class="card">
+    <h2>⚡ Alat Bantu Sinkronisasi Lirik (LRC Syncer)</h2>
+    <div class="lrc-tool-section">
+      <label>1. Audio yang ingin disinkronkan:</label>
+      <div style="display:flex; gap:8px;">
+        <input type="url" id="lrc_audio_url" placeholder="Paste URL Audio MP3 atau Audio Karaoke">
+        <button type="button" class="btn" style="background:#334155; color:#fff;" onclick="loadLrcAudio()">Load Audio</button>
+      </div>
+      <audio id="lrc_player" controls style="width:100%; margin-top:8px;"></audio>
+
+      <label>2. Tempel Lirik Mentah (1 baris = 1 ketukan):</label>
+      <textarea id="lrc_raw_text" placeholder="Bait pertama&#10;Bait kedua&#10;Bait ketiga"></textarea>
+      <button type="button" class="btn" style="background:#0284c7; color:#fff; margin-top:8px;" onclick="prepareLrcWorkspace()">Siapkan Sinkronisasi</button>
+
+      <div id="lrc_workspace" class="hidden" style="margin-top:12px;">
+        <div class="lrc-controls">
+          <button type="button" id="btnTagTime" class="btn btn-tag" onclick="tagLrcLine()">[SPASI] TAG TIME BARIS AKTIF</button>
+          <button type="button" class="btn" style="background:#991b1b; color:#fff;" onclick="resetLrcSync()">Reset</button>
+        </div>
+        <div id="lrc_lines_list" class="sync-lines-wrapper"></div>
+      </div>
+
+      <label style="margin-top:12px;">3. Hasil Format LRC:</label>
+      <textarea id="lrc_output" readonly placeholder="[00:00.00] Hasil LRC akan terisi otomatis..."></textarea>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button type="button" class="btn" style="background:#334155; color:#38bdf8;" onclick="salinKeForm('tambah')">⬇️ Salin ke Form Tambah Lagu</button>
+        <button type="button" class="btn" style="background:#334155; color:#38bdf8;" onclick="salinKeForm('edit')">⬇️ Salin ke Form Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM TAMBAH LAGU -->
+  <div class="card">
+    <h2>➕ Tambah Lagu Baru</h2>
+    
+    <label>Judul Lagu:</label>
+    <input type="text" id="title" placeholder="Contoh: Cinta Musim Durian">
+    
+    <label>Genre / Deskripsi:</label>
+    <input type="text" id="genre" placeholder="Contoh: Pop / Dangdut">
+    
+    <label>Lirik Biasa (Opsional):</label>
+    <textarea id="lyrics" placeholder="Masukkan lirik lagu standar di sini..."></textarea>
+
+    <label>🎤 Lirik Sinkronisasi Karaoke / Format LRC (Opsional):</label>
+    <textarea id="karaoke_lyrics" placeholder="[00:10.50] Baris lirik lagu..."></textarea>
+    
+    <label>🖼️ Upload Gambar Cover (JPG/PNG):</label>
+    <input type="file" id="cover_file" accept="image/*">
+    
+    <label>🎵 Upload File Audio Utama (MP3 dengan Vokal):</label>
+    <input type="file" id="audio_file" accept="audio/*">
+
+    <label>🎹 Upload File Audio Karaoke (MP3 Tanpa Vokal / Instrumen Saja) - Opsional:</label>
+    <input type="file" id="karaoke_file" accept="audio/*">
+    
+    <button id="btnSubmit" class="btn btn-primary" onclick="simpanLagu()">Simpan & Unggah Lagu</button>
+    
+    <div id="status"></div>
+  </div>
+
+  <!-- DAFTAR KELOLA LAGU -->
+  <div class="card">
+    <h2>📋 Kelola Koleksi Lagu <span id="songCountBadge" style="font-size:12px; color:#94a3b8;">(0 Lagu)</span></h2>
+    <div id="songListAdmin">
+      <p style="text-align:center; color:#94a3b8;">⏳ Memuat daftar lagu...</p>
+    </div>
+  </div>
+
+  <!-- MODAL POPUP EDIT LAGU -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>✏️ Edit Data Lagu</h2>
+      <input type="hidden" id="edit_id">
+      <input type="hidden" id="edit_old_cover">
+      <input type="hidden" id="edit_old_audio">
+      <input type="hidden" id="edit_old_karaoke">
+
+      <label>Judul Lagu:</label>
+      <input type="text" id="edit_title">
+
+      <label>Genre / Deskripsi:</label>
+      <input type="text" id="edit_genre">
+
+      <label>Lirik Biasa:</label>
+      <textarea id="edit_lyrics"></textarea>
+
+      <label>🎤 Lirik Sinkronisasi Karaoke (Format LRC):</label>
+      <textarea id="edit_karaoke_lyrics"></textarea>
+
+      <label>🖼️ Ganti Cover (Biarkan kosong jika tidak diganti):</label>
+      <input type="file" id="edit_cover_file" accept="image/*">
+
+      <label>🎵 Ganti File Audio Utama (Biarkan kosong jika tidak diganti):</label>
+      <input type="file" id="edit_audio_file" accept="audio/*">
+
+      <label>🎹 Ganti File Audio Karaoke / Instrumen (Biarkan kosong jika tidak diganti):</label>
+      <input type="file" id="edit_karaoke_file" accept="audio/*">
+
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-cancel" style="flex:1;" onclick="closeEditModal()">Batal</button>
+        <button id="btnUpdateSubmit" class="btn btn-primary" style="flex:2; margin-top:0;" onclick="updateLagu()">Simpan Perubahan</button>
+      </div>
+
+      <div id="editStatus" style="margin-top:10px; font-weight:bold; text-align:center;"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let songsCache = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchAdminSongs();
+    });
+
+    // --- 1. LOGIKA LRC SYNC TOOL ---
+    let lrcLinesData = [];
+    let lrcCurrentIndex = 0;
+    const lrcPlayer = document.getElementById('lrc_player');
+
+    function loadLrcAudio() {
+      const url = document.getElementById('lrc_audio_url').value.trim();
+      if (!url) {
+        alert('Masukkan URL audio terlebih dahulu.');
+        return;
+      }
+      lrcPlayer.src = url;
+      lrcPlayer.load();
+    }
+
+    function prepareLrcWorkspace() {
+      const rawText = document.getElementById('lrc_raw_text').value.trim();
+      if (!rawText) {
+        alert('Masukkan baris lirik mentah terlebih dahulu.');
+        return;
+      }
+
+      const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      lrcLinesData = lines.map(t => ({ text: t, timestamp: null }));
+      lrcCurrentIndex = 0;
+
+      renderLrcRows();
+      document.getElementById('lrc_workspace').classList.remove('hidden');
+      updateLrcOutput();
+    }
+
+    function renderLrcRows() {
+      const container = document.getElementById('lrc_lines_list');
+      container.innerHTML = '';
+
+      lrcLinesData.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'sync-row';
+        row.id = `lrc-row-${idx}`;
+        if (idx === lrcCurrentIndex) row.classList.add('current-active');
+        if (item.timestamp !== null) row.classList.add('tagged');
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'sync-time-tag';
+        timeSpan.textContent = item.timestamp !== null ? formatTimeTag(item.timestamp) : '[--:--.--]';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = item.text;
+
+        row.appendChild(timeSpan);
+        row.appendChild(textSpan);
+        container.appendChild(row);
+      });
+    }
+
+    function tagLrcLine() {
+      if (lrcCurrentIndex >= lrcLinesData.length) return;
+
+      const currentTime = lrcPlayer.currentTime || 0;
+      lrcLinesData[lrcCurrentIndex].timestamp = currentTime;
+
+      const currentRow = document.getElementById(`lrc-row-${lrcCurrentIndex}`);
+      if (currentRow) {
+        currentRow.classList.remove('current-active');
+        currentRow.classList.add('tagged');
+        const timeSpan = currentRow.querySelector('.sync-time-tag');
+        if (timeSpan) timeSpan.textContent = formatTimeTag(currentTime);
+      }
+
+      lrcCurrentIndex++;
+
+      if (lrcCurrentIndex < lrcLinesData.length) {
+        const nextRow = document.getElementById(`lrc-row-${lrcCurrentIndex}`);
+        if (nextRow) {
+          nextRow.classList.add('current-active');
+          nextRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      updateLrcOutput();
+    }
+
+    function resetLrcSync() {
+      lrcCurrentIndex = 0;
+      lrcLinesData.forEach(item => item.timestamp = null);
+      renderLrcRows();
+      updateLrcOutput();
+    }
+
+    function updateLrcOutput() {
+      const output = lrcLinesData.map(item => {
+        const tag = item.timestamp !== null ? formatTimeTag(item.timestamp) : '[00:00.00]';
+        return `${tag} ${item.text}`;
+      }).join('\n');
+
+      document.getElementById('lrc_output').value = output;
+    }
+
+    function formatTimeTag(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = (seconds % 60).toFixed(2);
+      return `[${String(mins).padStart(2, '0')}:${String(secs).padStart(5, '0')}]`;
+    }
+
+    function salinKeForm(target) {
+      const output = document.getElementById('lrc_output').value;
+      if (!output) {
+        alert('Belum ada output LRC untuk disalin.');
+        return;
+      }
+      if (target === 'tambah') {
+        document.getElementById('karaoke_lyrics').value = output;
+      } else if (target === 'edit') {
+        document.getElementById('edit_karaoke_lyrics').value = output;
+      }
+      alert(`Berhasil disalin ke Form ${target === 'tambah' ? 'Tambah' : 'Edit'}!`);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+      if (e.code === 'Space' && !isInput && !document.getElementById('lrc_workspace').classList.contains('hidden')) {
+        e.preventDefault();
+        tagLrcLine();
+      }
+    });
+
+    // --- 2. TAMBAH LAGU BARU ---
+    async function simpanLagu() {
+      const title = document.getElementById('title').value.trim();
+      const genre = document.getElementById('genre').value.trim();
+      const lyrics = document.getElementById('lyrics').value.trim();
+      const karaoke_lyrics = document.getElementById('karaoke_lyrics').value.trim();
+      
+      const coverFileInput = document.getElementById('cover_file');
+      const audioFileInput = document.getElementById('audio_file');
+      const karaokeFileInput = document.getElementById('karaoke_file');
+
+      const statusDiv = document.getElementById('status');
+      const btnSubmit = document.getElementById('btnSubmit');
+
+      const coverFile = coverFileInput.files[0];
+      const audioFile = audioFileInput.files[0];
+      const karaokeFile = karaokeFileInput.files[0] || null;
+
+      if (!title || !genre || !coverFile || !audioFile) {
+        statusDiv.style.color = '#ef4444';
+        statusDiv.innerText = '❌ Judul, Genre, Gambar Cover, dan File MP3 Utama wajib diisi!';
+        return;
+      }
+
+      try {
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = '⏳ Mengunggah file...';
+        statusDiv.style.color = '#f59e0b';
+        statusDiv.innerText = '⏳ Mengunggah Cover & Audio ke Supabase...';
+
+        const timestamp = Date.now();
+        const sanitizeFileName = (name) => name.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+        // Upload Cover
+        const coverPath = `covers/${timestamp}_${sanitizeFileName(coverFile.name)}`;
+        const { error: coverError } = await _supabase.storage.from('lagu-suno').upload(coverPath, coverFile, { cacheControl: '3600', upsert: true });
+        if (coverError) throw new Error('Gagal upload cover: ' + coverError.message);
+
+        // Upload Audio Utama
+        const audioPath = `audio/${timestamp}_${sanitizeFileName(audioFile.name)}`;
+        const { error: audioError } = await _supabase.storage.from('lagu-suno').upload(audioPath, audioFile, { cacheControl: '3600', upsert: true });
+        if (audioError) throw new Error('Gagal upload audio utama: ' + audioError.message);
+
+        let karaokeUrl = null;
+        // Upload File Audio Karaoke (Jika ada)
+        if (karaokeFile) {
+          statusDiv.innerText = '⏳ Mengunggah File Karaoke / Instrumen...';
+          const karaokePath = `karaoke/${timestamp}_${sanitizeFileName(karaokeFile.name)}`;
+          const { error: kError } = await _supabase.storage.from('lagu-suno').upload(karaokePath, karaokeFile, { cacheControl: '3600', upsert: true });
+          if (kError) throw new Error('Gagal upload audio karaoke: ' + kError.message);
+          
+          const { data: kData } = _supabase.storage.from('lagu-suno').getPublicUrl(karaokePath);
+          karaokeUrl = kData.publicUrl;
+        }
+
+        const { data: coverUrlData } = _supabase.storage.from('lagu-suno').getPublicUrl(coverPath);
+        const { data: audioUrlData } = _supabase.storage.from('lagu-suno').getPublicUrl(audioPath);
+
+        statusDiv.innerText = '⏳ Menyimpan data ke database...';
+        const { error: dbError } = await _supabase
+          .from('songs')
+          .insert([{ 
+            title, 
+            genre, 
+            lyrics, 
+            karaoke_lyrics: karaoke_lyrics || null,
+            cover_url: coverUrlData.publicUrl, 
+            audio_url: audioUrlData.publicUrl,
+            karaoke_url: karaokeUrl
+          }]);
+
+        if (dbError) throw dbError;
+
+        statusDiv.style.color = '#22c55e';
+        statusDiv.innerText = '✅ Berhasil! Lagu & file ter-upload.';
+
+        document.getElementById('title').value = '';
+        document.getElementById('genre').value = '';
+        document.getElementById('lyrics').value = '';
+        document.getElementById('karaoke_lyrics').value = '';
+        coverFileInput.value = '';
+        audioFileInput.value = '';
+        karaokeFileInput.value = '';
+
+        fetchAdminSongs();
+      } catch (err) {
+        statusDiv.style.color = '#ef4444';
+        statusDiv.innerText = '❌ ' + err.message;
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = 'Simpan & Unggah Lagu';
+      }
+    }
+
+    // --- 3. FETCH DAFTAR LAGU ---
+    async function fetchAdminSongs() {
+      const container = document.getElementById('songListAdmin');
+      const badge = document.getElementById('songCountBadge');
+
+      const { data: songs, error } = await _supabase
+        .from('songs')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) {
+        container.innerHTML = `<p style="color:#ef4444; text-align:center;">Gagal memuat: ${error.message}</p>`;
+        return;
+      }
+
+      if (!songs || songs.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#94a3b8;">Belum ada lagu yang di-upload.</p>`;
+        badge.innerText = '(0 Lagu)';
+        return;
+      }
+
+      songsCache = songs;
+      badge.innerText = `(${songs.length} Lagu)`;
+
+      container.innerHTML = songs.map(song => {
+        const hasKaraoke = song.karaoke_url ? `<span class="song-item-badge">🎤 Karaoke Ready</span>` : '';
+        return `
+          <div class="song-item">
+            <div class="song-item-info">
+              <img class="song-item-cover" src="${song.cover_url || 'https://via.placeholder.com/50'}" alt="Cover">
+              <div class="song-item-text">
+                <div class="song-item-title">${song.title} ${hasKaraoke}</div>
+                <div class="song-item-genre">${song.genre}</div>
+              </div>
+            </div>
+            <div class="song-actions">
+              <button class="btn btn-edit" onclick="openEditModal(${song.id})">✏️ Edit</button>
+              <button class="btn btn-delete" onclick="hapusLagu(${song.id}, '${song.title.replace(/'/g, "\\'")}')">🗑️ Hapus</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- 4. OPEN & CLOSE EDIT MODAL ---
+    function openEditModal(id) {
+      const song = songsCache.find(s => s.id === id);
+      if (!song) return;
+
+      document.getElementById('edit_id').value = song.id;
+      document.getElementById('edit_title').value = song.title || '';
+      document.getElementById('edit_genre').value = song.genre || '';
+      document.getElementById('edit_lyrics').value = song.lyrics || '';
+      document.getElementById('edit_karaoke_lyrics').value = song.karaoke_lyrics || '';
+      
+      document.getElementById('edit_old_cover').value = song.cover_url || '';
+      document.getElementById('edit_old_audio').value = song.audio_url || '';
+      document.getElementById('edit_old_karaoke').value = song.karaoke_url || '';
+
+      document.getElementById('edit_cover_file').value = '';
+      document.getElementById('edit_audio_file').value = '';
+      document.getElementById('edit_karaoke_file').value = '';
+      document.getElementById('editStatus').innerText = '';
+
+      // Tautkan audio lagu ini langsung ke URL audio tool sync jika mau dites
+      if (song.audio_url || song.karaoke_url) {
+        document.getElementById('lrc_audio_url').value = song.karaoke_url || song.audio_url;
+      }
+
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('show');
+    }
+
+    // --- 5. UPDATE LAGU ---
+    async function updateLagu() {
+      const id = document.getElementById('edit_id').value;
+      const title = document.getElementById('edit_title').value.trim();
+      const genre = document.getElementById('edit_genre').value.trim();
+      const lyrics = document.getElementById('edit_lyrics').value.trim();
+      const karaoke_lyrics = document.getElementById('edit_karaoke_lyrics').value.trim();
+      
+      const coverFileInput = document.getElementById('edit_cover_file');
+      const audioFileInput = document.getElementById('edit_audio_file');
+      const karaokeFileInput = document.getElementById('edit_karaoke_file');
+      
+      let cover_url = document.getElementById('edit_old_cover').value;
+      let audio_url = document.getElementById('edit_old_audio').value;
+      let karaoke_url = document.getElementById('edit_old_karaoke').value;
+
+      const editStatus = document.getElementById('editStatus');
+      const btnUpdate = document.getElementById('btnUpdateSubmit');
+
+      if (!title || !genre) {
+        editStatus.style.color = '#ef4444';
+        editStatus.innerText = '❌ Judul dan Genre wajib diisi!';
+        return;
+      }
+
+      try {
+        btnUpdate.disabled = true;
+        btnUpdate.innerText = '⏳ Memproses...';
+        editStatus.style.color = '#f59e0b';
+        editStatus.innerText = '⏳ Menyimpan perubahan...';
+
+        const timestamp = Date.now();
+        const sanitizeFileName = (name) => name.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+        // Ganti Cover jika ada
+        if (coverFileInput.files.length > 0) {
+          const coverFile = coverFileInput.files[0];
+          const coverPath = `covers/${timestamp}_${sanitizeFileName(coverFile.name)}`;
+          const { error: coverError } = await _supabase.storage.from('lagu-suno').upload(coverPath, coverFile, { cacheControl: '3600', upsert: true });
+          if (coverError) throw new Error('Gagal upload cover baru: ' + coverError.message);
+          const { data: coverUrlData } = _supabase.storage.from('lagu-suno').getPublicUrl(coverPath);
+          cover_url = coverUrlData.publicUrl;
+        }
+
+        // Ganti Audio Utama jika ada
+        if (audioFileInput.files.length > 0) {
+          const audioFile = audioFileInput.files[0];
+          const audioPath = `audio/${timestamp}_${sanitizeFileName(audioFile.name)}`;
+          const { error: audioError } = await _supabase.storage.from('lagu-suno').upload(audioPath, audioFile, { cacheControl: '3600', upsert: true });
+          if (audioError) throw new Error('Gagal upload audio baru: ' + audioError.message);
+          const { data: audioUrlData } = _supabase.storage.from('lagu-suno').getPublicUrl(audioPath);
+          audio_url = audioUrlData.publicUrl;
+        }
+
+        // Ganti Audio Karaoke jika ada
+        if (karaokeFileInput.files.length > 0) {
+          const karaokeFile = karaokeFileInput.files[0];
+          const karaokePath = `karaoke/${timestamp}_${sanitizeFileName(karaokeFile.name)}`;
+          const { error: kError } = await _supabase.storage.from('lagu-suno').upload(karaokePath, karaokeFile, { cacheControl: '3600', upsert: true });
+          if (kError) throw new Error('Gagal upload karaoke baru: ' + kError.message);
+          const { data: kData } = _supabase.storage.from('lagu-suno').getPublicUrl(karaokePath);
+          karaoke_url = kData.publicUrl;
+        }
+
+        // Update Record Database
+        const { error: updateError } = await _supabase
+          .from('songs')
+          .update({ 
+            title, 
+            genre, 
+            lyrics, 
+            karaoke_lyrics: karaoke_lyrics || null,
+            cover_url, 
+            audio_url,
+            karaoke_url: karaoke_url || null
+          })
+          .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        editStatus.style.color = '#22c55e';
+        editStatus.innerText = '✅ Perubahan berhasil disimpan!';
+
+        setTimeout(() => {
+          closeEditModal();
+          fetchAdminSongs();
+        }, 1000);
+
+      } catch (err) {
+        editStatus.style.color = '#ef4444';
+        editStatus.innerText = '❌ ' + err.message;
+      } finally {
+        btnUpdate.disabled = false;
+        btnUpdate.innerText = 'Simpan Perubahan';
+      }
+    }
+
+    // --- 6. HAPUS LAGU ---
+    async function hapusLagu(id, title) {
+      if (!confirm(`Apakah kamu yakin ingin menghapus lagu "${title}"?`)) return;
+
+      try {
+        const { error } = await _supabase
+          .from('songs')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        alert(`✅ Lagu "${title}" berhasil dihapus.`);
+        fetchAdminSongs();
+      } catch (err) {
+        alert('❌ Gagal menghapus lagu: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
