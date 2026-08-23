@@ -663,7 +663,6 @@
     let isShuffle = false;
     let isListView = false;
     
-    // Konfigurasi teks animasi visualizer
     let currentVisualizerText = localStorage.getItem('suno_vis_text') || 'fatur62';
     
     let currentSongsList = [];
@@ -1211,7 +1210,6 @@
               x += barWidth + 1;
             }
 
-            // Render Teks Dinamis dengan Penanganan Index 1-12 Karakter
             const textToRender = currentVisualizerText || 'fatur62';
             const letterSpacing = textToRender.length > 8 ? 14 : 16;
             const fontSize = textToRender.length > 8 ? '13px' : '15px';
@@ -1222,35 +1220,44 @@
             const totalTextWidth = textToRender.length * letterSpacing;
             const startX = (canvas.width / 2) - (totalTextWidth / 2) + (letterSpacing / 2);
 
+            // Pemetaan bin frekuensi dinamis & seimbang
             const letters = textToRender.split('').map((char, index) => {
               let binIndex;
-              
-              // Karakter 1 sampai 4: Mempertahankan responsifitas Bass & Low-Mid
-              if (index === 0) binIndex = 1;
-              else if (index === 1) binIndex = 3;
-              else if (index === 2) binIndex = 5;
-              else if (index === 3) binIndex = 7;
-              // Karakter 5 sampai 12: Dipetakan ke rentang Mid-High aktif (Bin 8 - 22)
-              else {
-                const step = (22 - 8) / Math.max(1, (textToRender.length - 4));
-                binIndex = Math.min(24, Math.floor(8 + ((index - 3) * step)));
+              let multiplier = 1.0;
+
+              if (index === 0) {
+                binIndex = 2;
+                multiplier = 0.65; // Redaman bass karakter 1 agar tidak terbang
+              } else if (index === 1) {
+                binIndex = 4;
+                multiplier = 0.72; // Redaman bass karakter 2 agar menyundul pas pucuk grafik
+              } else if (index === 2) {
+                binIndex = 6;
+                multiplier = 0.85;
+              } else if (index === 3) {
+                binIndex = 8;
+                multiplier = 0.95;
+              } else {
+                const step = (22 - 9) / Math.max(1, (textToRender.length - 4));
+                binIndex = Math.min(23, Math.floor(9 + ((index - 3) * step)));
+                multiplier = 1.35; // Gain boost untuk mid-high
               }
 
-              return { char, targetBin: binIndex, yOffset: 0 };
+              return { char, targetBin: binIndex, multiplier, yOffset: 0 };
             });
 
             letters.forEach((item, index) => {
               const freqValue = dataArray[item.targetBin] || 0;
               
-              // Memberikan penguatan sensitivitas (gain boost) pada karakter 5-12 (frekuensi mid-high)
-              const sensitivityMultiplier = index >= 4 ? 1.4 : 1.0;
-              let pushHeight = (freqValue / 255) * 35 * sensitivityMultiplier;
-              if (pushHeight > 38) pushHeight = 38;
+              // Hitung lompatan berbasis tinggi bar riil (maksimal 30px agar tidak keluar canvas)
+              let targetHeight = (freqValue / 255) * 32 * item.multiplier;
+              if (targetHeight > 28) targetHeight = 28;
 
-              if (pushHeight > item.yOffset) {
-                item.yOffset = pushHeight;
+              // Animasi naik instan saat disundul bar, turun perlahan (gravitasi)
+              if (targetHeight > item.yOffset) {
+                item.yOffset = targetHeight;
               } else {
-                item.yOffset *= 0.80;
+                item.yOffset *= 0.75; // Gravitasi turun lebih cepat dan natural
               }
 
               const letterX = startX + (index * letterSpacing);
@@ -1259,7 +1266,7 @@
 
               ctx.fillStyle = item.yOffset > 6 ? '#38bdf8' : '#ffffff';
               ctx.shadowColor = item.yOffset > 6 ? 'rgba(56, 189, 248, 1)' : 'transparent';
-              ctx.shadowBlur = item.yOffset > 6 ? 10 : 0;
+              ctx.shadowBlur = item.yOffset > 6 ? 8 : 0;
 
               ctx.fillText(item.char, letterX, currentY);
             });
