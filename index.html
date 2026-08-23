@@ -7,10 +7,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     html { scroll-behavior: smooth; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px 20px 100px 20px; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px 20px 120px 20px; }
     
     /* Header Judul & Subtitle */
-    .header-container { text-align: center; margin-bottom: 30px; }
+    .header-container { text-align: center; margin-bottom: 25px; }
     
     .header-title-wrapper {
       display: flex;
@@ -22,7 +22,7 @@
 
     h1 { color: #38bdf8; margin: 0; font-size: 28px; }
 
-    /* 🏷️ BADGE JUMLAH LAGU ESTETIS 🏷️ */
+    /* Badge Jumlah Lagu */
     .song-count-badge {
       background: rgba(30, 41, 59, 0.8);
       border: 1px solid rgba(56, 189, 248, 0.4);
@@ -58,7 +58,7 @@
       opacity: 0.95;
     }
     
-    /* 📦 BOX DESKRIPSI WEBSITE ESTETIS 📦 */
+    /* Box Deskripsi */
     .web-description-box {
       background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.8));
       border: 1px solid rgba(56, 189, 248, 0.4);
@@ -75,7 +75,7 @@
       backdrop-filter: blur(5px);
     }
 
-    /* 📋 BOX DAFTAR ISI JUDUL LAGU 📋 */
+    /* Box Daftar Isi */
     .playlist-index-box {
       background: rgba(15, 23, 42, 0.7);
       border: 1px dashed rgba(56, 189, 248, 0.3);
@@ -123,13 +123,19 @@
       border-color: #38bdf8;
     }
 
-    /* 🔍 KONTROL SEARCH & FILTER GENRE 🔍 */
+    /* Toolbar Filter, Customizer, & View Mode */
     .search-filter-container {
       max-width: 600px;
-      margin: 25px auto 25px auto;
+      margin: 20px auto 25px auto;
       display: flex;
       flex-direction: column;
       gap: 12px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
     .search-box {
@@ -142,6 +148,7 @@
       padding: 8px 14px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       transition: all 0.3s ease;
+      flex: 1;
     }
 
     .search-box:focus-within {
@@ -176,6 +183,76 @@
 
     .clear-btn:hover {
       color: #f8fafc;
+    }
+
+    .view-toggle-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .view-toggle-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* Pengaturan Kustom Teks Visualizer */
+    .visualizer-settings-box {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .vis-setting-label {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .vis-input {
+      flex: 1;
+      min-width: 120px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+    }
+    .vis-input:focus {
+      border-color: #38bdf8;
+    }
+    .vis-btn {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .vis-btn:hover {
+      background: #0369a1;
+    }
+    .vis-btn-reset {
+      background: #334155;
+      color: #94a3b8;
+    }
+    .vis-btn-reset:hover {
+      background: #475569;
+      color: #fff;
     }
 
     .genre-pills-wrapper {
@@ -214,25 +291,57 @@
       box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
     }
 
-    /* Grid Kartu Lagu */
-    .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: auto; }
+    /* Grid Layout */
+    .song-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+      gap: 20px; 
+      max-width: 1200px; 
+      margin: auto; 
+    }
     
+    /* Compact List Layout Mode */
+    .song-grid.list-view {
+      grid-template-columns: 1fr;
+      max-width: 750px;
+    }
+
+    .song-grid.list-view .card {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .song-grid.list-view .cover-container {
+      width: 120px;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
+    .song-grid.list-view .cover {
+      width: 120px;
+      height: 120px;
+    }
+
+    .song-grid.list-view .title,
+    .song-grid.list-view .genre {
+      text-align: left;
+    }
+
     /* Kartu Lagu */
     .card { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; transition: transform 0.3s ease, border-color 0.3s ease; border: 1px solid transparent; }
     .card.active-playing { border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
     
-    /* Ukuran Cover Kompak */
     .cover-container { text-align: center; width: 100%; margin-bottom: 12px; }
     .cover { width: 100%; max-width: 250px; height: 250px; object-fit: cover; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
     
-    .info { flex-grow: 1; display: flex; flex-direction: column; }
+    .info { flex-grow: 1; display: flex; flex-direction: column; width: 100%; }
     .title { font-size: 18px; font-weight: bold; margin: 0 0 5px 0; color: #f1f5f9; text-align: center; }
     .genre { font-size: 13px; color: #38bdf8; font-weight: 600; margin-bottom: 8px; text-align: center; }
     
-    /* 🎵 CANVAS AUDIO SPECTRUM VISUALIZER 🎵 */
     .visualizer-canvas { 
       width: 100%; 
-      height: 60px; 
+      height: 50px; 
       background: #0f172a; 
       border-radius: 6px; 
       margin-bottom: 8px; 
@@ -242,7 +351,6 @@
 
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
     
-    /* GRID TOMBOL DENGAN PORSI SPESIAL UNTUK DOWNLOAD MP3 */
     .btn-container { 
       display: grid; 
       grid-template-columns: 1.4fr 1fr 1fr 1fr; 
@@ -273,14 +381,17 @@
     .btn-share { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
     .btn-share:hover { background: #0284c7; color: #fff; }
 
-    /* 📥 STYLING KONFIRMASI DOWNLOAD INTERAKTIF 📥 */
     .dl-confirm-box { display: flex; gap: 4px; width: 100%; }
     .btn-dl-yes { background: #10b981; color: #fff; border: none; padding: 8px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1.2; white-space: nowrap; }
     .btn-dl-no { background: #ef4444; color: #fff; border: none; padding: 8px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 0.8; white-space: nowrap; }
     
-    .lyrics-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
+    .lyrics-wrapper { display: none; margin-top: 10px; }
+    .lyrics-actions { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+    .btn-copy-lyrics { background: #334155; color: #38bdf8; border: 1px solid #475569; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
+    .btn-copy-lyrics:hover { background: #0284c7; color: #fff; }
 
-    /* 💬 BOX PESAN PENDENGAR STYLING 💬 */
+    .lyrics-box { background: #0f172a; padding: 12px; border-radius: 8px; font-size: 13px; white-space: pre-wrap; color: #cbd5e1; border: 1px solid #334155; max-height: 180px; overflow-y: auto; line-height: 1.5; }
+
     .comments-box { display: none; background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid #334155; }
     .comments-list { max-height: 150px; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
     .comment-item { background: #1e293b; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #38bdf8; font-size: 12px; }
@@ -293,7 +404,7 @@
     .comment-input:focus { border-color: #38bdf8; }
     .btn-send-comment { background: #0284c7; color: #fff; border: none; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; }
 
-    /* 🎧 STICKY BOTTOM AUDIO PLAYER MELAYANG 🎧 */
+    /* Sticky Bottom Audio Player */
     .bottom-player {
       position: fixed;
       bottom: 0;
@@ -321,7 +432,8 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      min-width: 200px;
+      min-width: 180px;
+      max-width: 250px;
     }
 
     .player-cover {
@@ -355,7 +467,7 @@
     .player-controls {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .player-btn {
@@ -369,11 +481,17 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       transition: all 0.2s ease;
     }
 
     .player-btn:hover {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+
+    .player-btn.active-mode {
       background: #0284c7;
       color: #fff;
       border-color: #38bdf8;
@@ -404,7 +522,7 @@
       cursor: pointer;
     }
 
-    /* Toast Notification Share */
+    /* Toast Notification */
     .toast-notify {
       position: fixed;
       top: 20px;
@@ -425,6 +543,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    @media (max-width: 768px) {
+      .bottom-player {
+        flex-wrap: wrap;
+        padding: 8px 12px;
+      }
+      .player-progress-container {
+        order: 3;
+        width: 100%;
+        max-width: 100%;
+      }
+      .player-track-info {
+        min-width: auto;
+        flex: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -444,9 +578,9 @@
     
     <!-- Box Deskripsi Website -->
     <div class="web-description-box">
-      Selamat datang di Wadah platform pemutar musik Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik, audio spectrum visualizer, download, share, dan pesan pendengar.
+      Selamat datang di platform pemutar musik Suno AI. Nikmati berbagai genre lagu kreasi fatur62 lengkap dengan lirik, audio spectrum visualizer, download, share, dan pesan pendengar.
       
-      <!-- 📋 DAFTAR ISI JUDUL LAGU (OTOMATIS) 📋 -->
+      <!-- DAFTAR ISI JUDUL LAGU -->
       <div class="playlist-index-box">
         <div class="index-title">📌 Daftar Judul Lagu:</div>
         <div id="songs-index-list" class="index-list">
@@ -456,12 +590,23 @@
     </div>
   </div>
 
-  <!-- 🔍 KONTROL SEARCH & FILTER GENRE 🔍 -->
+  <!-- KONTROL SEARCH, CUSTOM TEXT, & FILTER GENRE -->
   <div class="search-filter-container">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Cari judul lagu, genre, lirik..." autocomplete="off">
-      <button id="clearSearch" class="clear-btn">✕</button>
+    <div class="toolbar-row">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Cari judul lagu, genre, lirik..." autocomplete="off">
+        <button id="clearSearch" class="clear-btn">✕</button>
+      </div>
+      <button id="viewToggleBtn" class="view-toggle-btn" onclick="toggleViewMode()">📋 List View</button>
+    </div>
+
+    <!-- Kotak Pengaturan Teks Visualizer -->
+    <div class="visualizer-settings-box">
+      <span class="vis-setting-label">✨ Teks Visualizer:</span>
+      <input type="text" id="customVisInput" class="vis-input" maxlength="12" placeholder="Maks. 12 Karakter">
+      <button class="vis-btn" onclick="saveCustomVisText()">Terapkan</button>
+      <button class="vis-btn vis-btn-reset" onclick="resetCustomVisText()">Reset</button>
     </div>
 
     <div class="genre-pills-wrapper">
@@ -475,7 +620,7 @@
     <p style="text-align: center; grid-column: 1/-1; color: #94a3b8;">⏳ Memuat lagu...</p>
   </div>
 
-  <!-- 🎧 STICKY BOTTOM AUDIO PLAYER HTML 🎧 -->
+  <!-- STICKY BOTTOM AUDIO PLAYER -->
   <div id="bottomPlayer" class="bottom-player">
     <div class="player-track-info">
       <img id="playerCover" src="" class="player-cover" alt="Cover">
@@ -486,6 +631,7 @@
     </div>
 
     <div class="player-controls">
+      <button id="playerShuffleBtn" class="player-btn" onclick="toggleShuffle()" title="Acak Putar Lagu (Shuffle)">🔀</button>
       <button class="player-btn" onclick="playPrevSong()" title="Lagu Sebelumnya">⏮</button>
       <button id="playerPlayBtn" class="player-btn" onclick="togglePlayPause()" title="Play/Pause">▶</button>
       <button class="player-btn" onclick="playNextSong()" title="Lagu Selanjutnya">⏭</button>
@@ -498,8 +644,8 @@
     </div>
   </div>
 
-  <!-- Toast Notifikasi Copy Link -->
-  <div id="toast" class="toast-notify">🔗 Link lagu berhasil disalin!</div>
+  <!-- Toast Notifikasi -->
+  <div id="toast" class="toast-notify">Pemberitahuan</div>
 
   <script>
     const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
@@ -514,11 +660,25 @@
     let searchQuery = '';
     let searchDebounce = null;
     let allGenreSet = new Set();
+    let isShuffle = false;
+    let isListView = false;
     
-    // Global State Player
+    // Konfigurasi teks animasi visualizer
+    let currentVisualizerText = localStorage.getItem('suno_vis_text') || 'fatur62';
+    
     let currentSongsList = [];
     let currentPlayingIndex = -1;
     let activeAudioElement = null;
+
+    function sanitizeText(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
     async function loadSongs() {
       const container = document.getElementById('song-list');
@@ -538,7 +698,7 @@
       const { data: songs, error } = await query.order('id', { ascending: false });
 
       if (error) {
-        container.innerHTML = `<p style="color:#ef4444; text-align:center; grid-column: 1/-1;">Gagal memuat lagu: ${error.message}</p>`;
+        container.innerHTML = `<p style="color:#ef4444; text-align:center; grid-column: 1/-1;">Gagal memuat lagu: ${sanitizeText(error.message)}</p>`;
         countSpan.innerText = '0';
         indexContainer.innerHTML = `<span style="color:#ef4444; font-size:11px;">Gagal memuat daftar.</span>`;
         return;
@@ -561,27 +721,26 @@
 
       indexContainer.innerHTML = songs.map((song) => `
         <a href="#card-${song.id}" class="index-item">
-          🎵 ${song.title}
+          🎵 ${sanitizeText(song.title)}
         </a>
       `).join('');
 
       container.innerHTML = songs.map((song, index) => `
         <div class="card" id="card-${song.id}">
           <div class="cover-container">
-            <img class="cover" src="${song.cover_url}" alt="${song.title}">
+            <img class="cover" src="${song.cover_url || ''}" alt="${sanitizeText(song.title)}">
           </div>
           <div class="info">
-            <div class="title">${song.title}</div>
-            <div class="genre">${song.genre}</div>
+            <div class="title">${sanitizeText(song.title)}</div>
+            <div class="genre">${sanitizeText(song.genre)}</div>
             
-            <canvas id="canvas-${song.id}" class="visualizer-canvas" width="300" height="60"></canvas>
+            <canvas id="canvas-${song.id}" class="visualizer-canvas" width="300" height="50"></canvas>
 
-            <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url}" onplay="handleSongPlay(${index})"></audio>
+            <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url || ''}" onplay="handleSongPlay(${index})"></audio>
             
             <div class="btn-container">
-              <!-- WADAH TOMBOL DOWNLOAD MP3 INTERAKTIF -->
               <div id="mp3-box-${song.id}" class="btn-mp3-wrapper">
-                <button class="btn btn-download" onclick="triggerDownload('${song.id}', '${song.audio_url}', '${escapeQuotes(song.title)}')">📥 Download MP3</button>
+                <button class="btn btn-download" onclick="triggerDownload('${song.id}', '${song.audio_url || ''}', '${escapeQuotes(song.title)}')">📥 Download</button>
               </div>
 
               ${song.lyrics ? `<button class="btn btn-lyrics" onclick="toggleLyrics(${song.id})">📄 Lirik</button>` : ''}
@@ -589,9 +748,15 @@
               <button class="btn btn-share" onclick="shareSongLink(${song.id})">🔗 Share</button>
             </div>
             
-            ${song.lyrics ? `<div id="lyrics-${song.id}" class="lyrics-box">${song.lyrics}</div>` : ''}
+            ${song.lyrics ? `
+              <div id="lyrics-wrapper-${song.id}" class="lyrics-wrapper">
+                <div class="lyrics-actions">
+                  <button class="btn-copy-lyrics" onclick="copyLyricsText('${escapeQuotes(song.lyrics)}')">📋 Salin Lirik</button>
+                </div>
+                <div id="lyrics-${song.id}" class="lyrics-box">${sanitizeText(song.lyrics)}</div>
+              </div>
+            ` : ''}
 
-            <!-- 💬 KOLOM PESAN PENDENGAR 💬 -->
             <div id="comments-${song.id}" class="comments-box">
               <div id="cmt-list-${song.id}" class="comments-list">
                 <span style="font-size:11px; color:#94a3b8;">Memuat pesan...</span>
@@ -607,20 +772,70 @@
         </div>
       `).join('');
 
-      // Auto Highlight jika ada Hash URL (#card-ID)
       checkUrlHashHighlight();
-
-      // Load jumlah pesan untuk setiap lagu
       songs.forEach(song => fetchCommentsCount(song.id));
     }
 
-    // 📥 LOGIKA SCRIPT FITUR MP3 DOWNLOAD INTERAKTIF 📥
+    function saveCustomVisText() {
+      const input = document.getElementById('customVisInput');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('⚠️ Masukkan teks terlebih dahulu!');
+        return;
+      }
+      currentVisualizerText = val.substring(0, 12);
+      localStorage.setItem('suno_vis_text', currentVisualizerText);
+      showToast(`✨ Teks visualizer diubah: "${currentVisualizerText}"`);
+    }
+
+    function resetCustomVisText() {
+      currentVisualizerText = 'fatur62';
+      localStorage.removeItem('suno_vis_text');
+      document.getElementById('customVisInput').value = '';
+      showToast('🔄 Teks visualizer direset ke default');
+    }
+
+    function toggleViewMode() {
+      const listContainer = document.getElementById('song-list');
+      const toggleBtn = document.getElementById('viewToggleBtn');
+      isListView = !isListView;
+
+      if (isListView) {
+        listContainer.classList.add('list-view');
+        toggleBtn.innerText = '🔲 Grid View';
+      } else {
+        listContainer.classList.remove('list-view');
+        toggleBtn.innerText = '📋 List View';
+      }
+    }
+
+    function toggleShuffle() {
+      isShuffle = !isShuffle;
+      const btn = document.getElementById('playerShuffleBtn');
+      if (isShuffle) {
+        btn.classList.add('active-mode');
+        showToast('🔀 Mode Shuffle Aktif');
+      } else {
+        btn.classList.remove('active-mode');
+        showToast('➡️ Mode Putar Berurutan');
+      }
+    }
+
+    function copyLyricsText(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Lirik berhasil disalin!');
+      }).catch(() => {
+        showToast('❌ Gagal menyalin lirik.');
+      });
+    }
+
     function triggerDownload(songId, songUrl, songTitle) {
       const box = document.getElementById(`mp3-box-${songId}`);
       if (box) {
         box.innerHTML = `
           <div class="dl-confirm-box">
-            <button class="btn-dl-yes" onclick="executeDownload('${songUrl}', '${songTitle}', '${songId}')">⬇️ Jadi Download</button>
+            <button class="btn-dl-yes" onclick="executeDownload('${songUrl}', '${songTitle}', '${songId}')">⬇️ Unduh</button>
             <button class="btn-dl-no" onclick="cancelDownload('${songId}', '${songUrl}', '${songTitle}')">❌ Batal</button>
           </div>
         `;
@@ -642,16 +857,22 @@
       const box = document.getElementById(`mp3-box-${songId}`);
       if (box) {
         box.innerHTML = `
-          <button class="btn btn-download" onclick="triggerDownload('${songId}', '${url}', '${escapeQuotes(title)}')">📥 Download MP3</button>
+          <button class="btn btn-download" onclick="triggerDownload('${songId}', '${url}', '${escapeQuotes(title)}')">📥 Download</button>
         `;
       }
     }
 
     function escapeQuotes(str) {
-      return str ? str.replace(/'/g, "\\'") : '';
+      return str ? str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n') : '';
     }
 
-    // 💬 LOGIKA SCRIPT FITUR PESAN PENDENGAR 💬
+    function toggleLyrics(id) {
+      const wrapper = document.getElementById(`lyrics-wrapper-${id}`);
+      if (wrapper) {
+        wrapper.style.display = wrapper.style.display === 'block' ? 'none' : 'block';
+      }
+    }
+
     function toggleComments(songId) {
       const el = document.getElementById(`comments-${songId}`);
       if (el) {
@@ -696,10 +917,10 @@
       listContainer.innerHTML = comments.map(c => `
         <div class="comment-item">
           <div class="comment-author">
-            <span>👤 ${c.name || 'Pendengar'}</span>
+            <span>👤 ${sanitizeText(c.name) || 'Pendengar'}</span>
             <span class="comment-time">${formatDate(c.created_at)}</span>
           </div>
-          <div class="comment-text">${c.message}</div>
+          <div class="comment-text">${sanitizeText(c.message)}</div>
         </div>
       `).join('');
     }
@@ -712,7 +933,7 @@
       const message = msgInput.value.trim();
 
       if (!message) {
-        alert('Tulis pesan kamu dulu ya, bro!');
+        alert('Tulis pesan kamu dulu ya!');
         return;
       }
 
@@ -737,15 +958,14 @@
       return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     }
 
-    // 🔄 AUTOPLAY & INTEGRASI STICKY PLAYER 🔄
     function handleSongPlay(index) {
       const song = currentSongsList[index];
       if (!song) return;
 
       currentPlayingIndex = index;
 
-      document.querySelectorAll('audio').forEach((aud, i) => {
-        if (i !== index) aud.pause();
+      document.querySelectorAll('audio').forEach((aud) => {
+        if (aud.id !== `audio-${song.id}`) aud.pause();
       });
 
       document.querySelectorAll('.card').forEach(c => c.classList.remove('active-playing'));
@@ -756,9 +976,9 @@
 
       initSpectrum(song.id);
 
-      document.getElementById('playerCover').src = song.cover_url;
-      document.getElementById('playerTitle').innerText = song.title;
-      document.getElementById('playerGenre').innerText = song.genre;
+      document.getElementById('playerCover').src = song.cover_url || '';
+      document.getElementById('playerTitle').innerText = song.title || '-';
+      document.getElementById('playerGenre').innerText = song.genre || '-';
       document.getElementById('playerPlayBtn').innerText = '⏸';
       document.getElementById('bottomPlayer').classList.add('show');
 
@@ -781,8 +1001,16 @@
 
     function playNextSong() {
       if (currentSongsList.length === 0) return;
-      let nextIndex = currentPlayingIndex + 1;
-      if (nextIndex >= currentSongsList.length) nextIndex = 0;
+      
+      let nextIndex;
+      if (isShuffle && currentSongsList.length > 1) {
+        do {
+          nextIndex = Math.floor(Math.random() * currentSongsList.length);
+        } while (nextIndex === currentPlayingIndex);
+      } else {
+        nextIndex = currentPlayingIndex + 1;
+        if (nextIndex >= currentSongsList.length) nextIndex = 0;
+      }
       
       const nextSong = currentSongsList[nextIndex];
       const nextAudio = document.getElementById(`audio-${nextSong.id}`);
@@ -842,10 +1070,10 @@
 
       if (navigator.share) {
         navigator.share({
-          title: `🎵 ${songTitle} - Koleksi Musik Suno AI (by fatur62)`,
+          title: `🎵 ${songTitle} - Koleksi Musik Suno AI`,
           text: `Dengarkan lagu "${songTitle}" di Koleksi Musik Suno AI by fatur62!`,
           url: shareUrl
-        }).catch((err) => console.log('Share dibatalkan:', err));
+        }).catch(() => {});
       } else {
         navigator.clipboard.writeText(shareUrl).then(() => {
           showToast('🔗 Link lagu berhasil disalin!');
@@ -880,7 +1108,10 @@
 
       songs.forEach(song => {
         if (song.genre) {
-          song.genre.split(',').forEach(g => allGenreSet.add(g.trim()));
+          song.genre.split(',').forEach(g => {
+            const trimmed = g.trim();
+            if (trimmed) allGenreSet.add(trimmed);
+          });
         }
       });
 
@@ -903,6 +1134,11 @@
     document.addEventListener('DOMContentLoaded', () => {
       const searchInput = document.getElementById('searchInput');
       const clearBtn = document.getElementById('clearSearch');
+      const customVisInput = document.getElementById('customVisInput');
+
+      if (customVisInput && currentVisualizerText !== 'fatur62') {
+        customVisInput.value = currentVisualizerText;
+      }
 
       searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value.trim();
@@ -921,13 +1157,6 @@
         loadSongs();
       });
     });
-
-    function toggleLyrics(id) {
-      const el = document.getElementById(`lyrics-${id}`);
-      if (el) {
-        el.style.display = el.style.display === 'block' ? 'none' : 'block';
-      }
-    }
 
     const connectedAudios = new Set();
 
@@ -959,19 +1188,6 @@
 
           connectedAudios.add(id);
 
-          const text = "fatur62";
-          const letters = text.split('').map((char, index) => {
-            let binIndex = 1 + Math.floor(index * 1.8);
-            if (char === '6') binIndex = 8;
-            if (char === '2') binIndex = 5; 
-
-            return {
-              char: char,
-              yOffset: 0,
-              targetBin: binIndex
-            };
-          });
-
           function renderFrame() {
             requestAnimationFrame(renderFrame);
             
@@ -995,14 +1211,25 @@
               x += barWidth + 1;
             }
 
-            ctx.font = 'bold 16px "Segoe UI", sans-serif';
+            // Render Teks Dinamis (Maksimal 12 Karakter)
+            const textToRender = currentVisualizerText || 'fatur62';
+            const letterSpacing = textToRender.length > 8 ? 14 : 16;
+            const fontSize = textToRender.length > 8 ? '13px' : '15px';
+
+            ctx.font = `bold ${fontSize} "Segoe UI", sans-serif`;
             ctx.textAlign = 'center';
 
-            const startX = canvas.width / 2 - (letters.length * 15) / 2 + 7;
+            const totalTextWidth = textToRender.length * letterSpacing;
+            const startX = (canvas.width / 2) - (totalTextWidth / 2) + (letterSpacing / 2);
+
+            const letters = textToRender.split('').map((char, index) => {
+              const binIndex = Math.min(Math.floor((index + 1) * (bufferLength / (textToRender.length + 1))), bufferLength - 1);
+              return { char, targetBin: binIndex, yOffset: 0 };
+            });
 
             letters.forEach((item, index) => {
               const freqValue = dataArray[item.targetBin] || 0;
-              let pushHeight = (freqValue / 255) * 40; 
+              let pushHeight = (freqValue / 255) * 35; 
 
               if (pushHeight > item.yOffset) {
                 item.yOffset = pushHeight;
@@ -1010,13 +1237,13 @@
                 item.yOffset *= 0.80;
               }
 
-              const letterX = startX + (index * 17);
-              const defaultY = canvas.height - 10; 
+              const letterX = startX + (index * letterSpacing);
+              const defaultY = canvas.height - 8; 
               const currentY = defaultY - item.yOffset;
 
-              ctx.fillStyle = item.yOffset > 8 ? '#38bdf8' : '#ffffff';
-              ctx.shadowColor = item.yOffset > 8 ? 'rgba(56, 189, 248, 1)' : 'transparent';
-              ctx.shadowBlur = item.yOffset > 8 ? 12 : 0;
+              ctx.fillStyle = item.yOffset > 6 ? '#38bdf8' : '#ffffff';
+              ctx.shadowColor = item.yOffset > 6 ? 'rgba(56, 189, 248, 1)' : 'transparent';
+              ctx.shadowBlur = item.yOffset > 6 ? 10 : 0;
 
               ctx.fillText(item.char, letterX, currentY);
             });
