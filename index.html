@@ -351,16 +351,17 @@
 
     audio { width: 100%; margin-top: auto; border-radius: 8px; }
     
+    /* Tombol Grid Baris Utama */
     .btn-container { 
       display: grid; 
-      grid-template-columns: 1.4fr 1fr 1fr 1fr; 
-      gap: 6px; 
+      grid-template-columns: 1.3fr 1fr 1fr 1fr; 
+      gap: 5px; 
       margin-top: 12px; 
     }
     .btn-mp3-wrapper { width: 100%; }
     .btn { 
       width: 100%; 
-      padding: 8px 2px; 
+      padding: 7px 2px; 
       border: none; 
       border-radius: 6px; 
       font-size: 11px; 
@@ -381,9 +382,36 @@
     .btn-share { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
     .btn-share:hover { background: #0284c7; color: #fff; }
 
+    /* Tombol Tambahan: Vocal Remover */
+    .btn-secondary-container {
+      margin-top: 6px;
+      display: flex;
+    }
+    .btn-vocal-remover {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #ffffff;
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+    }
+    .btn-vocal-remover:hover {
+      background: linear-gradient(135deg, #4338ca, #6d28d9);
+      box-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+    }
+
     .dl-confirm-box { display: flex; gap: 4px; width: 100%; }
-    .btn-dl-yes { background: #10b981; color: #fff; border: none; padding: 8px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1.2; white-space: nowrap; }
-    .btn-dl-no { background: #ef4444; color: #fff; border: none; padding: 8px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 0.8; white-space: nowrap; }
+    .btn-dl-yes { background: #10b981; color: #fff; border: none; padding: 7px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 1.2; white-space: nowrap; }
+    .btn-dl-no { background: #ef4444; color: #fff; border: none; padding: 7px 1px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; flex: 0.8; white-space: nowrap; }
     
     .lyrics-wrapper { display: none; margin-top: 10px; }
     .lyrics-actions { display: flex; justify-content: flex-end; margin-bottom: 4px; }
@@ -538,6 +566,8 @@
       opacity: 0;
       transform: translateY(-20px);
       transition: all 0.3s ease;
+      max-width: 320px;
+      line-height: 1.4;
     }
     .toast-notify.show {
       opacity: 1;
@@ -746,6 +776,13 @@
               <button class="btn btn-comments" onclick="toggleComments(${song.id})">💬 Pesan (<span id="cmt-count-${song.id}">0</span>)</button>
               <button class="btn btn-share" onclick="shareSongLink(${song.id})">🔗 Share</button>
             </div>
+
+            <!-- Tombol Vocal Remover Terhubung ke Web AI Gratis Tanpa Login -->
+            <div class="btn-secondary-container">
+              <button class="btn-vocal-remover" onclick="openVocalRemover('${song.audio_url || ''}', '${escapeQuotes(song.title)}')">
+                🎙️ Pisahkan Vokal & Musik (Vocal Remover)
+              </button>
+            </div>
             
             ${song.lyrics ? `
               <div id="lyrics-wrapper-${song.id}" class="lyrics-wrapper">
@@ -773,6 +810,32 @@
 
       checkUrlHashHighlight();
       songs.forEach(song => fetchCommentsCount(song.id));
+    }
+
+    // Logika Pintar Buka Vocal Remover (Otomatis Download MP3 & Buka Web Vocal Remover Gratis)
+    function openVocalRemover(audioUrl, songTitle) {
+      if (!audioUrl) {
+        showToast('❌ Link audio tidak valid.');
+        return;
+      }
+
+      // 1. Download file audio otomatis agar langsung ada di laptop/HP user
+      const a = document.createElement('a');
+      a.href = audioUrl;
+      a.download = `${songTitle}.mp3`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // 2. Salin URL audio ke clipboard
+      navigator.clipboard.writeText(audioUrl).catch(() => {});
+
+      // 3. Buka web Vocal Remover gratis tanpa login di tab baru
+      window.open('https://vocalremover.org/', '_blank');
+
+      // 4. Beri instruksi toast
+      showToast('🚀 File MP3 diunduh & Link disalin! Tinggal upload di tab Vocal Remover.');
     }
 
     function saveCustomVisText() {
@@ -1086,7 +1149,7 @@
       const toast = document.getElementById('toast');
       toast.innerText = msg;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+      setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
     function checkUrlHashHighlight() {
@@ -1220,17 +1283,16 @@
             const totalTextWidth = textToRender.length * letterSpacing;
             const startX = (canvas.width / 2) - (totalTextWidth / 2) + (letterSpacing / 2);
 
-            // Pemetaan bin frekuensi dinamis & seimbang
             const letters = textToRender.split('').map((char, index) => {
               let binIndex;
               let multiplier = 1.0;
 
               if (index === 0) {
                 binIndex = 2;
-                multiplier = 0.65; // Redaman bass karakter 1 agar tidak terbang
+                multiplier = 0.65;
               } else if (index === 1) {
                 binIndex = 4;
-                multiplier = 0.72; // Redaman bass karakter 2 agar menyundul pas pucuk grafik
+                multiplier = 0.72;
               } else if (index === 2) {
                 binIndex = 6;
                 multiplier = 0.85;
@@ -1240,7 +1302,7 @@
               } else {
                 const step = (22 - 9) / Math.max(1, (textToRender.length - 4));
                 binIndex = Math.min(23, Math.floor(9 + ((index - 3) * step)));
-                multiplier = 1.35; // Gain boost untuk mid-high
+                multiplier = 1.35;
               }
 
               return { char, targetBin: binIndex, multiplier, yOffset: 0 };
@@ -1249,15 +1311,13 @@
             letters.forEach((item, index) => {
               const freqValue = dataArray[item.targetBin] || 0;
               
-              // Hitung lompatan berbasis tinggi bar riil (maksimal 30px agar tidak keluar canvas)
               let targetHeight = (freqValue / 255) * 32 * item.multiplier;
               if (targetHeight > 28) targetHeight = 28;
 
-              // Animasi naik instan saat disundul bar, turun perlahan (gravitasi)
               if (targetHeight > item.yOffset) {
                 item.yOffset = targetHeight;
               } else {
-                item.yOffset *= 0.75; // Gravitasi turun lebih cepat dan natural
+                item.yOffset *= 0.75;
               }
 
               const letterX = startX + (index * letterSpacing);
