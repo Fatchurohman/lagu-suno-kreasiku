@@ -406,7 +406,87 @@
       cursor: pointer;
     }
 
-    /* Toast Notification Share */
+    /* 📦 POPUP MODAL PILIHAN DOWNLOAD MP3 📦 */
+    .modal-download-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10001;
+      padding: 20px;
+    }
+    .modal-download-overlay.show {
+      display: flex;
+    }
+    .modal-download-content {
+      background: #1e293b;
+      border: 1px solid #38bdf8;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 380px;
+      padding: 20px;
+      text-align: center;
+      box-sizing: border-box;
+      animation: modalPop 0.25s ease-out;
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-download-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .modal-download-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 18px;
+    }
+    .modal-download-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-dl-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-dl-option:hover {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+    .btn-dl-close {
+      margin-top: 14px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .btn-dl-close:hover {
+      color: #f8fafc;
+    }
+
+    /* Toast Notification Share & Download */
     .toast-notify {
       position: fixed;
       top: 20px;
@@ -418,7 +498,7 @@
       font-size: 13px;
       font-weight: bold;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 10000;
+      z-index: 10002;
       opacity: 0;
       transform: translateY(-20px);
       transition: all 0.3s ease;
@@ -500,6 +580,27 @@
     </div>
   </div>
 
+  <!-- 📦 MODAL POPUP PILIHAN DOWNLOAD MP3 📦 -->
+  <div id="downloadModal" class="modal-download-overlay" onclick="closeDownloadModal(event)">
+    <div class="modal-download-content" onclick="event.stopPropagation()">
+      <div id="modalDownloadTitle" class="modal-download-title">Pilih Format Download</div>
+      <div class="modal-download-subtitle">Silakan pilih jenis file audio yang ingin diunduh:</div>
+      
+      <div class="modal-download-options">
+        <button class="btn-dl-option" onclick="processDownloadOption('vocal')">
+          <span>🎤 Vokal dan Musik</span>
+          <span>⬇️</span>
+        </button>
+        <button class="btn-dl-option" onclick="processDownloadOption('karaoke')">
+          <span>🎹 Musik (Karaoke)</span>
+          <span>⬇️</span>
+        </button>
+      </div>
+
+      <button class="btn-dl-close" onclick="closeDownloadModal()">Batal</button>
+    </div>
+  </div>
+
   <!-- Toast Notifikasi Copy Link & Download -->
   <div id="toast" class="toast-notify">🔗 Link lagu berhasil disalin!</div>
 
@@ -517,10 +618,11 @@
     let searchDebounce = null;
     let allGenreSet = new Set();
     
-    // Global State Player
+    // Global State Player & Download Modal
     let currentSongsList = [];
     let currentPlayingIndex = -1;
     let activeAudioElement = null;
+    let selectedSongForDownload = null;
 
     async function loadSongs() {
       const container = document.getElementById('song-list');
@@ -581,8 +683,8 @@
             <audio id="audio-${song.id}" controls crossorigin="anonymous" src="${song.audio_url || ''}" onplay="handleSongPlay(${index})"></audio>
             
             <div class="btn-container">
-              <!-- TOMBOL DOWNLOAD MP3 1-KLIK LANGSUNG -->
-              <button id="dl-btn-${song.id}" class="btn btn-download" onclick="directDownloadMp3('${song.id}', '${song.audio_url || ''}', '${escapeQuotes(song.title || 'Lagu_Suno')}')">
+              <!-- TOMBOL DOWNLOAD MP3 (Membuka Pilihan Vokal / Musik) -->
+              <button id="dl-btn-${song.id}" class="btn btn-download" onclick="openDownloadModal(${song.id})">
                 📥 Download MP3
               </button>
 
@@ -613,56 +715,75 @@
       songs.forEach(song => fetchCommentsCount(song.id));
     }
 
-    // 📥 LOGIKA DIRECT 1-CLICK MP3 DOWNLOAD 📥
-    async function directDownloadMp3(songId, audioUrl, songTitle) {
-      if (!audioUrl) {
-        showToast('❌ Link audio tidak valid.');
-        return;
-      }
+    // 📥 LOGIKA MODAL PILIHAN DOWNLOAD MP3 📥
+    function openDownloadModal(songId) {
+      const song = currentSongsList.find(s => s.id === songId);
+      if (!song) return;
 
-      const dlButton = document.getElementById(`dl-btn-${songId}`);
-      const originalText = '📥 Download MP3';
+      selectedSongForDownload = song;
+      document.getElementById('modalDownloadTitle').innerText = `Download "${song.title || 'Lagu'}"`;
+      document.getElementById('downloadModal').classList.add('show');
+    }
+
+    function closeDownloadModal(e) {
+      if (e && e.target !== document.getElementById('downloadModal') && e.target.className !== 'btn-dl-close') return;
+      document.getElementById('downloadModal').classList.remove('show');
+      selectedSongForDownload = null;
+    }
+
+    function processDownloadOption(type) {
+      if (!selectedSongForDownload) return;
+
+      const song = selectedSongForDownload;
+      closeDownloadModal();
+
+      if (type === 'vocal') {
+        if (!song.audio_url) {
+          showToast('❌ Link audio vokal tidak tersedia.');
+          return;
+        }
+        directDownloadFile(song.audio_url, `${song.title || 'Lagu'}.mp3`);
+      } else if (type === 'karaoke') {
+        if (!song.karaoke_url || typeof song.karaoke_url !== 'string' || song.karaoke_url.trim() === '') {
+          showToast('karaoke belum tersedia');
+          return;
+        }
+        directDownloadFile(song.karaoke_url, `${song.title || 'Lagu'} (Karaoke - Musik).mp3`);
+      }
+    }
+
+    async function directDownloadFile(fileUrl, fileName) {
+      const cleanFileName = fileName.replace(/[/\\?%*:|"<>]/g, '_');
+      showToast(`⏳ Mengunduh "${cleanFileName}"...`);
 
       try {
-        if (dlButton) {
-          dlButton.disabled = true;
-          dlButton.innerHTML = '⏳ Unduh...';
-        }
-        showToast(`⏳ Mengunduh "${songTitle}"...`);
-
-        const response = await fetch(audioUrl);
-        if (!response.ok) throw new Error('Gagal mengambil file audio');
+        const response = await fetch(fileUrl);
+        if (!response.ok) throw new Error('Gagal mengambil file');
 
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
         
-        const cleanFileName = (songTitle || 'Lagu_Suno').replace(/[/\\?%*:|"<>]/g, '_');
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = downloadUrl;
-        a.download = `${cleanFileName}.mp3`;
+        a.download = cleanFileName;
         document.body.appendChild(a);
         a.click();
         
         window.URL.revokeObjectURL(downloadUrl);
         document.body.removeChild(a);
         
-        showToast(`✅ Selesai mengunduh "${songTitle}"!`);
+        showToast(`✅ Selesai mengunduh "${cleanFileName}"!`);
       } catch (err) {
         console.error('Download error:', err);
         const a = document.createElement('a');
-        a.href = audioUrl;
-        a.download = `${songTitle || 'Lagu'}.mp3`;
+        a.href = fileUrl;
+        a.download = cleanFileName;
         a.target = '_blank';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         showToast('📥 Membuka file audio...');
-      } finally {
-        if (dlButton) {
-          dlButton.disabled = false;
-          dlButton.innerHTML = originalText;
-        }
       }
     }
 
