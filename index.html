@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koleksi Musik Suno AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --accent: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding-bottom: 120px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #38bdf8;
+    }
+
+    /* Grid Layout */
+    .song-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .song-card {
+      background-color: var(--bg-card);
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .song-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+
+    .song-card.active {
+      border-color: #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+    }
+
+    .song-cover {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      object-fit: cover;
+      background-color: #0f172a;
+    }
+
+    .song-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-genre {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Sticky Player Bar */
+    .sticky-player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-card);
+      border-top: 1px solid #334155;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 1000;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 200px;
+    }
+
+    .player-info-text strong {
+      display: block;
+      font-size: 14px;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 250px;
+    }
+
+    .player-info-text span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    audio {
+      height: 38px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    /* Tombol Download Karaoke */
+    .btn-download-karaoke {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      white-space: nowrap;
+    }
+
+    .btn-download-karaoke:hover {
+      background-color: #0369a1;
+      transform: scale(1.02);
+    }
+
+    .btn-download-karaoke:active {
+      transform: scale(0.98);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      z-index: 2000;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .toast.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 15px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🎵 Koleksi Musik Suno AI</h1>
+    </header>
+
+    <div id="song-grid" class="song-grid">
+      <p style="color: var(--text-muted);">Memuat daftar lagu...</p>
+    </div>
+  </div>
+
+  <!-- Sticky Player Bar -->
+  <div class="sticky-player">
+    <div class="player-info">
+      <div class="player-info-text">
+        <strong id="player-title">Pilih Lagu</strong>
+        <span id="player-genre">-</span>
+      </div>
+    </div>
+
+    <div class="player-controls">
+      <audio id="main-player" controls></audio>
+      
+      <!-- Tombol Karaoke Download -->
+      <button id="btn-karaoke-download" class="btn-download-karaoke" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>Karaoke</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Box Toast Pesan -->
+  <div id="app-toast" class="toast hidden"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentTrack = null;
+    let toastTimeout = null;
+
+    const mainPlayer = document.getElementById('main-player');
+    const playerTitle = document.getElementById('player-title');
+    const playerGenre = document.getElementById('player-genre');
+    const btnKaraoke = document.getElementById('btn-karaoke-download');
+    const songGrid = document.getElementById('song-grid');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchSongs();
+      initEvents();
+    });
+
+    function initEvents() {
+      btnKaraoke.addEventListener('click', () => {
+        if (!currentTrack) {
+          showToast('Silakan pilih dan putar lagu terlebih dahulu.');
+          return;
+        }
+
+        // Pengecekan ketersediaan musik karaoke
+        if (!currentTrack.karaoke_url || typeof currentTrack.karaoke_url !== 'string' || currentTrack.karaoke_url.trim() === '') {
+          showToast('karaoke belum tersedia');
+          return;
+        }
+
+        // Jalankan download jika tersedia
+        downloadKaraokeFile(currentTrack.karaoke_url, `${currentTrack.title || 'Musik'} - Karaoke.mp3`);
+      });
+    }
+
+    async function fetchSongs() {
+      try {
+        const { data: songs, error } = await _supabase
+          .from('songs')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (error) throw error;
+
+        if (!songs || songs.length === 0) {
+          songGrid.innerHTML = `<p style="color: var(--text-muted);">Belum ada koleksi lagu yang tersedia.</p>`;
+          return;
+        }
+
+        renderSongGrid(songs);
+      } catch (err) {
+        songGrid.innerHTML = `<p style="color: #ef4444;">Gagal memuat lagu: ${err.message}</p>`;
+      }
+    }
+
+    function renderSongGrid(songs) {
+      songGrid.innerHTML = songs.map(song => `
+        <div class="song-card" data-id="${song.id}">
+          <img class="song-cover" src="${song.cover_url || 'https://via.placeholder.com/300'}" alt="${song.title}">
+          <div class="song-title">${song.title}</div>
+          <div class="song-genre">${song.genre}</div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.song-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const songId = parseInt(card.dataset.id, 10);
+          const selected = songs.find(s => s.id === songId);
+          if (selected) {
+            playSong(selected);
+            document.querySelectorAll('.song-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+          }
+        });
+      });
+    }
+
+    function playSong(song) {
+      currentTrack = song;
+      playerTitle.textContent = song.title || 'Untitled';
+      playerGenre.textContent = song.genre || 'Suno AI';
+
+      mainPlayer.src = song.audio_url || '';
+      mainPlayer.play().catch(err => console.error('Play error:', err));
+    }
+
+    function downloadKaraokeFile(url, filename) {
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.setAttribute('download', filename);
+      anchor.setAttribute('target', '_blank');
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      showToast('Mengunduh musik karaoke...');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('app-toast');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
