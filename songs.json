@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "title": "Judul Lagu Pertama",
+    "genre": "Pop Jawa",
+    "cover_url": "./covers/cover-1.jpg",
+    "audio_url": "./audio/lagu-1.mp3",
+    "karaoke_url": "./audio/lagu-1-karaoke.mp3",
+    "lyrics": "Baris lirik pertama\nBaris lirik kedua",
+    "synced_lyrics": "0:Intro musik...\n12:Lirik masuk..."
+  },
+  {
+    "id": 2,
+    "title": "Judul Lagu Kedua",
+    "genre": "Ambyar, Pop",
+    "cover_url": "./covers/cover-2.jpg",
+    "audio_url": "./audio/lagu-2.mp3",
+    "karaoke_url": "",
+    "lyrics": "Tulis lirik lagu kedua di sini",
+    "synced_lyrics": ""
+  }
+]
