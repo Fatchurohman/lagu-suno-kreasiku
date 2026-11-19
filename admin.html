@@ -16,7 +16,9 @@
     .btn-preview:hover { background: #38bdf8; color: #0f172a; transform: translateY(-2px); }
 
     .card { background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); margin-bottom: 25px; border: 1px solid rgba(56, 189, 248, 0.2); }
+    .card-import { border: 1px solid #f59e0b; background: rgba(30, 41, 59, 0.95); }
     h2 { color: #38bdf8; margin-top: 0; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+    .card-import h2 { color: #fbbf24; }
     
     label { display: block; margin-top: 14px; font-size: 13px; color: #94a3b8; font-weight: bold; }
     input[type="text"], input[type="password"], textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; box-sizing: border-box; }
@@ -29,13 +31,15 @@
     .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: all 0.2s ease; }
     .btn-primary { background: #0284c7; color: #fff; width: 100%; margin-top: 20px; font-size: 16px; padding: 12px; }
     .btn-primary:hover { background: #0369a1; }
-    .btn-primary:disabled { background: #475569; cursor: not-allowed; }
+    .btn-primary:disabled, .btn-warning:disabled { background: #475569; cursor: not-allowed; color: #cbd5e1; }
     .btn-success { background: #059669; color: #fff; margin-top: 14px; width: 100%; }
+    .btn-warning { background: #f59e0b; color: #0f172a; margin-top: 14px; width: 100%; padding: 12px; font-size: 15px; }
     .btn-edit { background: #f59e0b; color: #000; font-size: 12px; }
     .btn-delete { background: #ef4444; color: #fff; font-size: 12px; }
     .btn-cancel { background: #475569; color: #fff; }
 
-    #status, #configStatus { margin-top: 12px; font-weight: bold; text-align: center; word-break: break-word; font-size: 13px; }
+    #status, #configStatus, #importStatus { margin-top: 12px; font-weight: bold; text-align: center; word-break: break-word; font-size: 13px; }
+    .note-text { font-size: 12px; color: #cbd5e1; line-height: 1.5; margin: 6px 0 10px 0; }
 
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal-overlay.show { display: flex; }
@@ -68,11 +72,11 @@
     <div class="grid-3">
       <div>
         <label>Username GitHub:</label>
-        <input type="text" id="gh_owner" placeholder="contoh: fatur62">
+        <input type="text" id="gh_owner" value="Fatchurohman">
       </div>
       <div>
         <label>Nama Repository:</label>
-        <input type="text" id="gh_repo" placeholder="contoh: musik-suno">
+        <input type="text" id="gh_repo" value="lagu-suno-kreasiku">
       </div>
       <div>
         <label>Branch:</label>
@@ -83,6 +87,17 @@
     <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
     <button class="btn btn-success" onclick="simpanConfigGitHub()">💾 Simpan Koneksi & Muat Lagu</button>
     <div id="configStatus"></div>
+  </div>
+
+  <!-- IMPOR LAGU LAMA DARI SUPABASE -->
+  <div class="card card-import">
+    <h2>📦 Impor Data Lagu Lama (songs_rows.json)</h2>
+    <p class="note-text">
+      Pilih file <code>songs_rows.json</code> dari folder Download HP-mu. Semua judul, genre, lirik, dan link lama Supabase akan otomatis diubah ke link jsDelivr GitHub dan disimpan ke <code>songs.json</code>.
+    </p>
+    <input type="file" id="import_json_file" accept=".json,.txt,application/json,text/plain">
+    <button id="btnImport" class="btn btn-warning" onclick="imporSongsRowsJson()">🚀 Impor & Simpan ke GitHub Sekarang</button>
+    <div id="importStatus"></div>
   </div>
 
   <!-- FORM TAMBAH LAGU -->
@@ -127,6 +142,7 @@
       <input type="hidden" id="edit_old_cover">
       <input type="hidden" id="edit_old_audio">
       <input type="hidden" id="edit_old_karaoke">
+      <input type="hidden" id="edit_old_synced">
 
       <label>Judul Lagu:</label>
       <input type="text" id="edit_title">
@@ -156,13 +172,13 @@
   </div>
 
   <script>
+    const OLD_SUPABASE_PREFIX = 'https://nqbjtzhhizjkhmhkkatb.supabase.co/storage/v1/object/public/lagu-suno/';
     let songsCache = [];
-    let songsJsonSha = null; // Dibutuhkan GitHub API saat update songs.json
+    let songsJsonSha = null;
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Muat konfigurasi GitHub yang tersimpan di browser
-      document.getElementById('gh_owner').value = localStorage.getItem('gh_owner') || '';
-      document.getElementById('gh_repo').value = localStorage.getItem('gh_repo') || '';
+      document.getElementById('gh_owner').value = localStorage.getItem('gh_owner') || 'Fatchurohman';
+      document.getElementById('gh_repo').value = localStorage.getItem('gh_repo') || 'lagu-suno-kreasiku';
       document.getElementById('gh_branch').value = localStorage.getItem('gh_branch') || 'main';
       document.getElementById('gh_token').value = localStorage.getItem('gh_token') || '';
 
@@ -201,7 +217,6 @@
       return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9._-]/g, '');
     }
 
-    // Helper Konversi UTF-8 <-> Base64 agar emoji & karakter Indonesia aman
     function utf8ToBase64(str) {
       const bytes = new TextEncoder().encode(str);
       let binary = '';
@@ -224,7 +239,15 @@
       });
     }
 
-    // Upload file media (MP3 / JPG) ke GitHub & kembalikan URL jsDelivr
+    function convertOldUrl(url, newBase) {
+      if (!url || typeof url !== 'string') return '';
+      const trimmed = url.trim();
+      if (trimmed.startsWith(OLD_SUPABASE_PREFIX)) {
+        return trimmed.replace(OLD_SUPABASE_PREFIX, `${newBase}/`);
+      }
+      return trimmed;
+    }
+
     async function uploadFileToGitHub(filePath, file) {
       const cfg = getConfig();
       const base64Content = await fileToBase64(file);
@@ -252,7 +275,6 @@
       return `https://cdn.jsdelivr.net/gh/${cfg.owner}/${cfg.repo}@${cfg.branch}/${filePath}`;
     }
 
-    // Simpan perubahan array lagu ke songs.json di GitHub
     async function saveSongsJsonToGitHub(songsArray, commitMessage) {
       const cfg = getConfig();
       const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/songs.json`;
@@ -304,11 +326,10 @@
         });
 
         if (res.status === 404) {
-          // File songs.json belum ada, mulai dari array kosong
           songsCache = [];
           songsJsonSha = null;
           badge.innerText = '(0 Lagu)';
-          container.innerHTML = `<p style="text-align:center; color:#94a3b8;">Belum ada file songs.json. Silakan tambah lagu pertama di atas, file akan dibuat otomatis!</p>`;
+          container.innerHTML = `<p style="text-align:center; color:#94a3b8;">Belum ada file songs.json. Silakan impor lagu lama atau tambah lagu baru di atas.</p>`;
           return;
         }
 
@@ -322,11 +343,95 @@
         const decoded = base64ToUtf8(data.content);
         songsCache = JSON.parse(decoded);
 
-        // Urutkan terbaru di atas
-        songsCache.sort((a, b) => b.id - a.id);
+        songsCache.sort((a, b) => Number(b.id) - Number(a.id));
         renderAdminSongs();
       } catch (err) {
         container.innerHTML = `<p style="color:#ef4444; text-align:center;">❌ ${err.message}</p>`;
+      }
+    }
+
+    // 2. IMPOR SONGS_ROWS.JSON DARI SUPABASE
+    async function imporSongsRowsJson() {
+      const cfg = getConfig();
+      const fileInput = document.getElementById('import_json_file');
+      const statusDiv = document.getElementById('importStatus');
+      const btnImport = document.getElementById('btnImport');
+
+      if (!cfg.token || !cfg.owner || !cfg.repo) {
+        statusDiv.style.color = '#ef4444';
+        statusDiv.innerText = '❌ Isi dan simpan Koneksi GitHub di atas dulu!';
+        return;
+      }
+
+      const file = fileInput.files[0];
+      if (!file) {
+        statusDiv.style.color = '#ef4444';
+        statusDiv.innerText = '❌ Pilih file songs_rows.json dari HP-mu dulu!';
+        return;
+      }
+
+      try {
+        btnImport.disabled = true;
+        btnImport.innerText = '⏳ Memproses & Mengunggah...';
+        statusDiv.style.color = '#fbbf24';
+        statusDiv.innerText = '⏳ Membaca file songs_rows.json...';
+
+        // Pastikan SHA songs.json terbaru sudah termuat
+        if (!songsJsonSha) await fetchAdminSongs();
+
+        const rawText = await file.text();
+        const importedData = JSON.parse(rawText);
+        if (!Array.isArray(importedData)) {
+          throw new Error('Format file bukan daftar JSON lagu yang valid.');
+        }
+
+        const newBase = `https://cdn.jsdelivr.net/gh/${cfg.owner}/${cfg.repo}@${cfg.branch}`;
+        let addedCount = 0;
+
+        const existingMap = new Map(songsCache.map(s => [Number(s.id), s]));
+
+        importedData.forEach(item => {
+          const id = Number(item.id);
+          const cleanSong = {
+            id: id,
+            title: (item.title || 'Tanpa Judul').trim(),
+            genre: (item.genre || '-').trim(),
+            cover_url: convertOldUrl(item.cover_url, newBase),
+            audio_url: convertOldUrl(item.audio_url, newBase),
+            karaoke_url: convertOldUrl(item.karaoke_url, newBase),
+            lyrics: item.lyrics || '',
+            synced_lyrics: item.synced_lyrics || ''
+          };
+
+          if (!existingMap.has(id)) {
+            existingMap.set(id, cleanSong);
+            addedCount++;
+          } else {
+            // Update jika judulnya sama dan link lama masih supabase
+            const cur = existingMap.get(id);
+            if (cur.title === cleanSong.title) {
+              existingMap.set(id, cleanSong);
+            }
+          }
+        });
+
+        const mergedList = Array.from(existingMap.values()).sort((a, b) => Number(b.id) - Number(a.id));
+
+        statusDiv.innerText = `⏳ Menyimpan ${mergedList.length} lagu ke songs.json di GitHub...`;
+        await saveSongsJsonToGitHub(mergedList, `Impor ${addedCount} lagu dari Supabase`);
+
+        songsCache = mergedList;
+        renderAdminSongs();
+        fileInput.value = '';
+
+        statusDiv.style.color = '#22c55e';
+        statusDiv.innerText = `✅ Berhasil! Total ${songsCache.length} lagu sekarang sudah masuk di songs.json GitHub.`;
+      } catch (err) {
+        statusDiv.style.color = '#ef4444';
+        statusDiv.innerText = '❌ Gagal impor: ' + err.message;
+      } finally {
+        btnImport.disabled = false;
+        btnImport.innerText = '🚀 Impor & Simpan ke GitHub Sekarang';
       }
     }
 
@@ -348,7 +453,7 @@
         return `
           <div class="song-item">
             <div class="song-item-info">
-              <img class="song-item-cover" src="${song.cover_url || 'https://placehold.co/50x50/1e293b/38bdf8?text=🎵'}" alt="Cover">
+              <img class="song-item-cover" loading="lazy" src="${song.cover_url || 'https://placehold.co/50x50/1e293b/38bdf8?text=🎵'}" onerror="this.src='https://placehold.co/50x50/1e293b/38bdf8?text=🎵'" alt="Cover">
               <div class="song-item-text">
                 <div class="song-item-title">${song.title} ${karaokeTag}</div>
                 <div class="song-item-genre">${song.genre}</div>
@@ -363,7 +468,7 @@
       }).join('');
     }
 
-    // 2. TAMBAH LAGU BARU
+    // 3. TAMBAH LAGU BARU
     async function simpanLagu() {
       const cfg = getConfig();
       const statusDiv = document.getElementById('status');
@@ -420,7 +525,7 @@
           audio_url: audioUrl,
           karaoke_url: karaokeUrl,
           lyrics: lyrics,
-          synced_lyrics: lyrics
+          synced_lyrics: ''
         };
 
         songsCache.unshift(newSong);
@@ -446,7 +551,7 @@
       }
     }
 
-    // 3. OPEN & CLOSE EDIT MODAL
+    // 4. OPEN & CLOSE EDIT MODAL
     function openEditModal(id) {
       const song = songsCache.find(s => String(s.id) === String(id));
       if (!song) return;
@@ -454,11 +559,12 @@
       document.getElementById('edit_id').value = song.id;
       document.getElementById('edit_title').value = song.title || '';
       document.getElementById('edit_genre').value = song.genre || '';
-      document.getElementById('edit_lyrics').value = song.lyrics || song.synced_lyrics || '';
+      document.getElementById('edit_lyrics').value = song.lyrics || '';
       
       document.getElementById('edit_old_cover').value = song.cover_url || '';
       document.getElementById('edit_old_audio').value = song.audio_url || '';
       document.getElementById('edit_old_karaoke').value = song.karaoke_url || '';
+      document.getElementById('edit_old_synced').value = song.synced_lyrics || '';
 
       document.getElementById('edit_cover_file').value = '';
       document.getElementById('edit_audio_file').value = '';
@@ -472,7 +578,7 @@
       document.getElementById('editModal').classList.remove('show');
     }
 
-    // 4. UPDATE DATA LAGU (EDIT)
+    // 5. UPDATE DATA LAGU (EDIT)
     async function updateLagu() {
       const id = Number(document.getElementById('edit_id').value);
       const title = document.getElementById('edit_title').value.trim();
@@ -486,6 +592,7 @@
       let cover_url = document.getElementById('edit_old_cover').value.trim();
       let audio_url = document.getElementById('edit_old_audio').value.trim();
       let karaoke_url = document.getElementById('edit_old_karaoke').value.trim();
+      const synced_lyrics = document.getElementById('edit_old_synced').value;
 
       const editStatus = document.getElementById('editStatus');
       const btnUpdate = document.getElementById('btnUpdateSubmit');
@@ -528,7 +635,7 @@
           audio_url,
           karaoke_url,
           lyrics,
-          synced_lyrics: lyrics
+          synced_lyrics
         };
 
         await saveSongsJsonToGitHub(songsCache, `Edit lagu: ${title}`);
@@ -547,7 +654,7 @@
       }
     }
 
-    // 5. HAPUS LAGU
+    // 6. HAPUS LAGU
     async function hapusLagu(id, title) {
       if (!confirm(`Apakah kamu yakin ingin menghapus lagu "${title}" dari daftar?`)) return;
 
