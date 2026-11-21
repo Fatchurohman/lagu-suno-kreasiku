@@ -1,5 +1,15 @@
 [
   {
+    "id": 66,
+    "title": "Labirin Rindu",
+    "genre": "Pop Shogaze",
+    "cover_url": "https://cdn.jsdelivr.net/gh/Fatchurohman/lagu-suno-kreasiku@main/covers/1795262749055_labirin-rindu.jpg",
+    "audio_url": "https://cdn.jsdelivr.net/gh/Fatchurohman/lagu-suno-kreasiku@main/mp3/1795262749055_labirin_rindu.mp3",
+    "karaoke_url": "",
+    "lyrics": "",
+    "synced_lyrics": ""
+  },
+  {
     "id": 65,
     "title": "Gunungkidul Saksi Bisu",
     "genre": "Dangdut",
