@@ -1,5 +1,15 @@
 [
   {
+    "id": 67,
+    "title": "Jatuh Bangun",
+    "genre": "Pop rap",
+    "cover_url": "https://cdn.jsdelivr.net/gh/Fatchurohman/lagu-suno-kreasiku@main/covers/1795279883833_134306.jpg",
+    "audio_url": "https://cdn.jsdelivr.net/gh/Fatchurohman/lagu-suno-kreasiku@main/mp3/1795279883833_jatuh-bangun-1.mp3",
+    "karaoke_url": "",
+    "lyrics": "Lirik menyusul",
+    "synced_lyrics": ""
+  },
+  {
     "id": 66,
     "title": "Labirin Rindu",
     "genre": "Pop Shogaze",
