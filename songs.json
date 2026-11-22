@@ -1,5 +1,15 @@
 [
   {
+    "id": 69,
+    "title": "KTP (Kosong Tapi Penuh)",
+    "genre": "Driftphonk",
+    "cover_url": "https://cdn.jsdelivr.net/gh/Fatchurohman/lagu-suno-kreasiku@main/covers/1795358643165_135138.jpg",
+    "audio_url": "https://cdn.jsdelivr.net/gh/Fatchurohman/lagu-suno-kreasiku@main/mp3/1795358643165_ktpkosong-tapi-penuh.mp3",
+    "karaoke_url": "",
+    "lyrics": "Menyusul",
+    "synced_lyrics": ""
+  },
+  {
     "id": 68,
     "title": "Nglanggeran Dadi Saksi",
     "genre": "Lo-fie nights",
