@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Koleksi Musik Suno AI</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     html { scroll-behavior: smooth; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px 20px 120px 20px; }
@@ -131,6 +130,7 @@
     .comment-form { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; border-top: 1px dashed #334155; padding-top: 8px; }
     .comment-input { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 12px; outline: none; }
     .btn-send-comment { background: #0284c7; color: #fff; border: none; padding: 6px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; }
+    .btn-send-comment:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .bottom-player {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -280,17 +280,12 @@
   <div id="toast" class="toast-notify">🔗 Link lagu berhasil disalin!</div>
 
   <script>
-    // Supabase hanya dipakai untuk fitur Pesan Pendengar (opsional)
-    const SUPABASE_URL = 'https://nqbjtzhhizjkhmhkkatb.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_sIbk3yeQLELLhqDrvc9QHQ_1qErOVjU';
+    // Server Komentar via Google Sheets + Apps Script (Gratis & Tidak Pernah Tidur)
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwYHFerQcJMpIoNf0bxL8-4fvJqxfgEeiuIoRZlj2DOFedrEG7EWexSNJ3PHnHfjZ1lLQ/exec';
 
     // Sumber utama daftar lagu dari GitHub (Rp 0 & Tanpa Batas Kuota)
     const SONGS_JSON_URL = './songs.json';
     const SONGS_CACHE_KEY = 'fatur62_songs_cache_v3';
-
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession: false }
-    });
 
     let audioCtx = null;
     let currentGenre = 'all';
@@ -305,6 +300,12 @@
     let selectedSongForDownload = null;
     let currentVisualizerText = localStorage.getItem('user_spectrum_name') || 'fatur62';
     let lyricStates = {};
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
 
     function sanitizeSongsData(rawArray) {
       if (!Array.isArray(rawArray)) return [];
@@ -449,7 +450,7 @@
               <div class="comment-form">
                 <input type="text" id="cmt-name-${song.id}" class="comment-input" placeholder="Nama Kamu">
                 <input type="text" id="cmt-msg-${song.id}" class="comment-input" placeholder="Tulis kesan/pesan...">
-                <button class="btn-send-comment" onclick="sendComment(${song.id})">Kirim Pesan 🚀</button>
+                <button id="cmt-btn-${song.id}" class="btn-send-comment" onclick="sendComment(${song.id})">Kirim Pesan 🚀</button>
               </div>
             </div>
           </div>
@@ -588,6 +589,11 @@
       document.body.removeChild(a);
     }
 
+    function getSongKeyById(songId) {
+      const song = masterSongsList.find(s => s.id === songId);
+      return song ? song.title : String(songId);
+    }
+
     function toggleComments(songId) {
       const el = document.getElementById(`comments-${songId}`);
       if (el) {
@@ -600,48 +606,73 @@
     async function loadComments(songId) {
       const listContainer = document.getElementById(`cmt-list-${songId}`);
       const badge = document.getElementById(`cmt-count-${songId}`);
+      const songKey = getSongKeyById(songId);
+
+      listContainer.innerHTML = `<span style="font-size:11px; color:#94a3b8;">⏳ Memuat pesan...</span>`;
+
       try {
-        const { data: comments, error } = await _supabase
-          .from('comments')
-          .select('*')
-          .eq('song_id', songId)
-          .order('id', { ascending: false });
+        const res = await fetch(`${GAS_URL}?lagu=${encodeURIComponent(songKey)}`);
+        const json = await res.json();
 
-        if (error) throw error;
+        if (json.status !== 'ok') throw new Error(json.message || 'Gagal memuat');
 
-        if (badge) badge.innerText = `(${comments ? comments.length : 0})`;
+        const comments = json.data || [];
+        if (badge) badge.innerText = `(${comments.length})`;
 
-        if (!comments || comments.length === 0) {
+        if (comments.length === 0) {
           listContainer.innerHTML = `<span style="font-size:11px; color:#94a3b8; text-align:center;">Belum ada pesan. Jadi yang pertama! 😊</span>`;
           return;
         }
+
         listContainer.innerHTML = comments.map(c => `
           <div class="comment-item">
-            <div class="comment-author"><span>👤 ${c.name || 'Pendengar'}</span><span class="comment-time">${formatDate(c.created_at)}</span></div>
-            <div class="comment-text">${c.message || ''}</div>
+            <div class="comment-author">
+              <span>👤 ${escapeHtml(c.nama || 'Pendengar')}</span>
+              <span class="comment-time">${formatDate(c.timestamp)}</span>
+            </div>
+            <div class="comment-text">${escapeHtml(c.pesan || '')}</div>
           </div>
         `).join('');
       } catch (err) {
-        listContainer.innerHTML = `<span style="font-size:11px; color:#ef4444;">Pesan sedang tidak dapat dimuat (Server komentar sedang istirahat).</span>`;
+        listContainer.innerHTML = `<span style="font-size:11px; color:#ef4444;">Gagal memuat pesan. Coba klik tombol Pesan lagi.</span>`;
       }
     }
 
     async function sendComment(songId) {
       const nameInput = document.getElementById(`cmt-name-${songId}`);
       const msgInput = document.getElementById(`cmt-msg-${songId}`);
+      const sendBtn = document.getElementById(`cmt-btn-${songId}`);
       const name = nameInput ? nameInput.value.trim() || 'Anonim' : 'Anonim';
       const message = msgInput ? msgInput.value.trim() : '';
+      const songKey = getSongKeyById(songId);
 
       if (!message) { alert('Tulis pesan kamu dulu ya, bro!'); return; }
 
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerText = 'Mengirim... ⏳';
+      }
+
       try {
-        const { error } = await _supabase.from('comments').insert([{ song_id: songId, name, message }]);
-        if (error) throw error;
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ lagu: songKey, nama: name, pesan: message })
+        });
+        const json = await res.json();
+
+        if (json.status !== 'ok') throw new Error(json.message || 'Gagal menyimpan pesan');
+
         msgInput.value = '';
         showToast('💬 Pesan terkirim!');
         loadComments(songId);
       } catch (err) {
         alert('Gagal mengirim pesan: ' + err.message);
+      } finally {
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          sendBtn.innerText = 'Kirim Pesan 🚀';
+        }
       }
     }
 
